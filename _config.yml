@@ -1,8 +1,8 @@
-name: Jekyll Bulma
-description: "Jekyll Bulma Theme, Bulma.io CSS Framework Jekyll Template for Developers"
-baseurl: /jekyll-bulma
+name: Pekko Lin
+description: "Pekko Lin's Homepage"
+baseurl: /pekkolin
 url: http://pekkolin.github.io
-download: "https://github.com/erayaydin/jekyll-bulma/archive/master.zip"
+
 social:
   github: pekkolin
   email: aydineray@mail.com
