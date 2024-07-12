@@ -3,24 +3,16 @@ description: "Pekko Lin's Homepage"
 baseurl: /pekkolin
 url: http://pekkolin.github.io
 
-social:
-  github: pekkolin
-  email: aydineray@mail.com
-  facebook:
-  twitter: erayaydi
-  instagram:
-  tumblr:
 author:
   name: Pekko Lin
   bio: "Chinese 1, 2, 3, 4 & AP Chinese Teacher"
-  email: aydineray@mail.com
   image: /assets/images/author.jpg
-  github: erayaydin
-  facebook: erayaydi
-  twitter: erayaydi
+  github: 
+  facebook: 
+  twitter: 
   instagram:
   tumblr:
-  show_on_post: true
+  show_on_post: false
 permalink: /:categories/:title/
 sass:
   style: compressed
