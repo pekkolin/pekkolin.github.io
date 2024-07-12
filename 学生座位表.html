@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级座位表</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #studentList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .student-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            width: calc(25% - 10px);
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .student-card.absent {
+            background-color: #ffcccb;
+        }
+                   .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #studentEditList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #studentEditList li {
+            margin-bottom: 10px;
+        }
+        #addStudentInput {
+            width: 70%;
+            padding: 5px;
+            margin-right: 10px;
+        }
+           .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>班级座位表</h1>
+    <div class="controls">
+        <button onclick="openEditModal()">编辑学生名单</button>
+        <button onclick="selectRandomStudent()">随机抽取学生</button>
+        <button onclick="addScore()">加一分</button>
+        <button onclick="subtractScore()">扣一分</button>
+        <button onclick="resetAllScores()">分数归零</button>
+        <button onclick="markAbsent()">出缺席</button>
+        <button onclick="downloadCSV()">下载</button>
+       <button onclick="document.getElementById('fileInput').click()">汇入</button>
+        <input type="file" id="fileInput" class="hidden" accept=".csv" onchange="importCSV(this.files[0])">
+    </div>
+    <div id="studentList"></div>
+
+    <!-- 编辑学生名单的模态对话框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>编辑学生名单</h2>
+            <ul id="studentEditList"></ul>
+            <input type="text" id="addStudentInput" placeholder="输入新学生姓名">
+            <button onclick="addStudent()">添加学生</button>
+        </div>
+    </div>
+
+    <script>
+        let students = [];
+        let selectedStudent = null;
+
+
+        function loadData() {
+            const savedStudents = localStorage.getItem('students');
+            if (savedStudents) {
+                students = JSON.parse(savedStudents);
+                updateStudentList();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('students', JSON.stringify(students));
+        }
+
+        function openEditModal() {
+            document.getElementById('editModal').style.display = 'block';
+            updateEditList();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            updateStudentList();
+            saveData();
+        }
+
+        function updateEditList() {
+            const list = document.getElementById('studentEditList');
+            list.innerHTML = '';
+            students.forEach((student, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="text" value="${student.name}" onchange="updateStudentName(${index}, this.value)">
+                    <button onclick="deleteStudent(${index})">删除</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function updateStudentName(index, newName) {
+            students[index].name = newName;
+        }
+
+        function deleteStudent(index) {
+            students.splice(index, 1);
+            updateEditList();
+        }
+
+        function addStudent() {
+            const input = document.getElementById('addStudentInput');
+            const name = input.value.trim();
+            if (name) {
+                students.push({ name: name, score: 0, absent: false });
+                input.value = '';
+                updateEditList();
+            }
+        }
+
+        function selectRandomStudent() {
+            const presentStudents = students.filter(student => !student.absent);
+            if (presentStudents.length > 0) {
+                const randomIndex = Math.floor(Math.random() * presentStudents.length);
+                selectedStudent = presentStudents[randomIndex];
+                alert(`已选中学生：${selectedStudent.name}`);
+                updateStudentList();
+            } else {
+                alert("没有可选择的学生");
+            }
+        }
+
+        function addScore() {
+            if (selectedStudent) {
+                selectedStudent.score++;
+                updateStudentList();
+                saveData();
+            } else {
+                alert("请先选择一个学生");
+            }
+        }
+
+        function subtractScore() {
+            if (selectedStudent) {
+                selectedStudent.score--;
+                updateStudentList();
+                saveData();
+            } else {
+                alert("请先选择一个学生");
+            }
+        }
+
+        function resetAllScores() {
+            if (confirm("确定要将所有学生的分数归零吗？")) {
+                students.forEach(student => student.score = 0);
+                updateStudentList();
+                saveData();
+                alert("所有学生的分数已归零");
+            }
+        }
+
+        function markAbsent() {
+            if (selectedStudent) {
+                selectedStudent.absent = !selectedStudent.absent;
+                updateStudentList();
+                saveData();
+            } else {
+                alert("请先选择一个学生");
+            }
+        }
+
+function downloadCSV() {
+            let csvContent = "姓名,分数,出勤状态\n";
+            students.forEach(student => {
+                csvContent += `${student.name},${student.score},${student.absent ? '缺席' : '出席'}\n`;
+            });
+
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                
+                // 生成文件名
+                const now = new Date();
+                const dateString = now.getFullYear() + 
+                                   String(now.getMonth() + 1).padStart(2, '0') + 
+                                   String(now.getDate()).padStart(2, '0');
+                const timeString = String(now.getHours()).padStart(2, '0') + 
+                                   String(now.getMinutes()).padStart(2, '0') + 
+                                   String(now.getSeconds()).padStart(2, '0');
+                const fileName = `班级座位表_学生出缺席和课堂参与信息_${dateString}_${timeString}.csv`;
+                
+                link.setAttribute("href", url);
+                link.setAttribute("download", fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+        
+                function importCSV(file) {
+            if (!file) {
+                alert('请选择一个CSV文件');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    
+                    // 检查文件格式
+                    if (lines.length < 2) {
+                        throw new Error('文件格式错误或为空');
+                    }
+                    
+                    const headers = lines[0].toLowerCase().split(',');
+                    if (!headers.includes('姓名') || !headers.includes('分数') || !headers.includes('出勤状态')) {
+                        throw new Error('CSV文件缺少必要的列（姓名、分数、出勤状态）');
+                    }
+
+                    const nameIndex = headers.indexOf('姓名');
+                    const scoreIndex = headers.indexOf('分数');
+                    const attendanceIndex = headers.indexOf('出勤状态');
+
+                    const newStudents = lines.slice(1)
+                        .map(line => {
+                            const values = line.split(',');
+                            if (values.length < 3) return null; // 跳过格式不正确的行
+                            return {
+                                name: values[nameIndex].trim(),
+                                score: parseInt(values[scoreIndex]) || 0,
+                                absent: values[attendanceIndex].trim() === '缺席'
+                            };
+                        })
+                        .filter(student => student && student.name); // 过滤掉空行和无效数据
+
+                    if (newStudents.length === 0) {
+                        throw new Error('没有有效的学生数据');
+                    }
+
+                    // 确认是否覆盖现有数据
+                    if (students.length > 0) {
+                        if (confirm('导入将覆盖现有数据。是否继续？')) {
+                            students = newStudents;
+                        } else {
+                            return;
+                        }
+                    } else {
+                        students = newStudents;
+                    }
+
+                    updateStudentList();
+                    saveData();
+                    alert(`成功导入 ${students.length} 名学生的信息`);
+                } catch (error) {
+                    alert('导入失败: ' + error.message);
+                }
+            };
+            reader.onerror = function() {
+                alert('读取文件时发生错误');
+            };
+            reader.readAsText(file);
+        }
+
+
+        function updateStudentList() {
+            const studentListElement = document.getElementById('studentList');
+            studentListElement.innerHTML = '';
+            students.forEach(student => {
+                const studentCard = document.createElement('div');
+                studentCard.className = `student-card${student.absent ? ' absent' : ''}`;
+                studentCard.innerHTML = `
+                    <h3>${student.name}</h3>
+                    <p>分数：${student.score}</p>
+                    <p>${student.absent ? '缺席' : '出席'}</p>
+                `;
+                studentCard.onclick = () => {
+                    selectedStudent = student;
+                    updateStudentList();
+                };
+                if (student === selectedStudent) {
+                    studentCard.style.border = '2px solid #4CAF50';
+                }
+                studentListElement.appendChild(studentCard);
+            });
+        }
+
+        window.onload = loadData;
+        window.onbeforeunload = saveData;
+    </script>
+</body>
+</html>
+

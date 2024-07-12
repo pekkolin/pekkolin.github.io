@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒数计时器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #timer {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        input {
+            padding: 5px;
+            font-size: 16px;
+            width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>倒数计时器</h1>
+    <div id="timer">00:00</div>
+    <div>
+        <button onclick="startTimer()">开始计时</button>
+        <button onclick="resetTimer()">重置</button>
+    </div>
+    <div>
+        <button onclick="setTimer(20)">20秒</button>
+        <button onclick="setTimer(120)">2分钟</button>
+        <button onclick="setTimer(240)">4分钟</button>
+        <button onclick="setTimer(300)">5分钟</button>
+    </div>
+    <div>
+        <input type="text" id="customTime" placeholder="分:秒">
+        <button onclick="setCustomTimer()">设置自定义时间</button>
+    </div>
+
+    <audio id="alarmSound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3"></audio>
+
+    <script>
+        let timer;
+        let timeLeft = 0;
+        const alarmSound = document.getElementById('alarmSound');
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (!timer && timeLeft > 0) {
+                timer = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        clearInterval(timer);
+                        timer = null;
+                        playAlarm();
+                        alert('时间到！');
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timer = null;
+            timeLeft = 0;
+            updateDisplay();
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+        }
+
+        function setTimer(seconds) {
+            resetTimer();
+            timeLeft = seconds;
+            updateDisplay();
+        }
+
+        function setCustomTimer() {
+            const customTime = document.getElementById('customTime').value;
+            const timeParts = customTime.split(':');
+            
+            if (timeParts.length === 2 && !isNaN(timeParts[0]) && !isNaN(timeParts[1])) {
+                const minutes = parseInt(timeParts[0]);
+                const seconds = parseInt(timeParts[1]);
+                
+                if (seconds >= 0 && seconds < 60 && minutes >= 0) {
+                    setTimer(minutes * 60 + seconds);
+                } else {
+                    alert('请输入有效的时间格式（分:秒）！');
+                }
+            } else {
+                alert('请输入有效的时间格式（分:秒）！');
+            }
+        }
+
+        function playAlarm() {
+            alarmSound.play();
+        }
+    </script>
+</body>
+</html>
