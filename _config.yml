@@ -1,34 +1,25 @@
-name: Pekko Lin
-description: "Pekko Lin's Homepage"
-baseurl: /pekkolin
-url: http://pekkolin.github.io
+title: 林老师
+description: 这是Pekko老师的个人 GitHub 页面
+url: "https://pekkolin.github.io"
 
+# 主题设置
+theme: jekyll-theme-minimal
+
+# 作者信息
 author:
-  name: Pekko Lin
-  bio: "Chinese 1, 2, 3, 4 & AP Chinese Teacher"
-  image: /assets/images/author.jpg
-  github: 
-  facebook: 
-  twitter: 
-  instagram:
-  tumblr:
-  show_on_post: false
-permalink: /:categories/:title/
-sass:
-  style: compressed
-paginate: 5
-paginate_path: "/:num/"
+  name: pekkolin
+  email: email@example.com
+
+# 导航链接
+nav:
+  - {title: 首页, url: "/"}
+  - {title: 学生座位表, url: "/学生座位表.html"}
+  - {title: 倒数计时器, url: "/倒数计时器.html"}
+
+# GitHub 设置
+github:
+  is_project_page: false
+
+# 其他设置
 markdown: kramdown
-
-plugins:
-  - jekyll-paginate
-  - jekyll-feed
-  - jekyll-gist
-
-exclude:
-  - Gemfile
-  - Gemfile.lock
-  - README.md
-  - LICENSE
-  - CNAME
-  - vendor
+highlighter: rouge
