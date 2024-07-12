@@ -1,18 +1,18 @@
 name: Jekyll Bulma
 description: "Jekyll Bulma Theme, Bulma.io CSS Framework Jekyll Template for Developers"
 baseurl: /jekyll-bulma
-url: http://erayaydin.github.io
+url: http://pekkolin.github.io
 download: "https://github.com/erayaydin/jekyll-bulma/archive/master.zip"
 social:
-  github: erayaydin
+  github: pekkolin
   email: aydineray@mail.com
   facebook:
   twitter: erayaydi
   instagram:
   tumblr:
 author:
-  name: Eray AYDIN
-  bio: "Senior PHP Developer and Linux System Administrator, Free Software Fan, Archy (On Way Trust User), Junior Game Developer"
+  name: Pekko Lin
+  bio: "Chinese 1, 2, 3, 4 & AP Chinese Teacher"
   email: aydineray@mail.com
   image: /assets/images/author.jpg
   github: erayaydin
