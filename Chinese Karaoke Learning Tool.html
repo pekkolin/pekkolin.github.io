@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文歌曲卡拉OK学习工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #d32f2f;
+            text-align: center;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #lyrics {
+            white-space: pre-wrap;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>中文歌曲卡拉OK学习工具</h1>
+    
+    <div class="section">
+        <label for="youtubeUrl">输入YouTube视频网址：</label>
+        <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+        <button onclick="loadVideo()">加载视频</button>
+    </div>
+    
+    <div class="section">
+        <div id="player"></div>
+    </div>
+    
+    <div class="section">
+        <h2>歌词</h2>
+        <div id="lyrics"></div>
+    </div>
+    
+    <div class="section">
+        <button onclick="downloadLyrics()">下载歌词</button>
+    </div>
+
+    <script>
+        let player;
+        let lyrics = "";
+
+        // 加载YouTube IFrame API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function loadVideo() {
+            const videoUrl = document.getElementById('youtubeUrl').value;
+            const videoId = extractVideoId(videoUrl);
+            
+            if (videoId) {
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player('player', {
+                        height: '360',
+                        width: '640',
+                        videoId: videoId,
+                        events: {
+                            'onReady': onPlayerReady
+                        }
+                    });
+                }
+            } else {
+                alert('请输入有效的YouTube视频网址');
+            }
+        }
+
+        function extractVideoId(url) {
+            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[7].length == 11) ? match[7] : false;
+        }
+
+        function onPlayerReady(event) {
+            // 这里应该调用一个API来获取歌词，但由于我们没有实际的API，我们将使用示例歌词
+            lyrics = "你 好 (nǐ hǎo), 世 界 (shì jiè)！\n欢 迎 (huān yíng) 来 到 (lái dào) 中 文 (zhōng wén) 学 习 (xué xí) 工 具 (gōng jù)。";
+            document.getElementById('lyrics').innerText = lyrics;
+        }
+
+        function downloadLyrics() {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(lyrics));
+            element.setAttribute('download', 'lyrics.txt');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        // 当YouTube API准备就绪时，这个函数会被调用
+        function onYouTubeIframeAPIReady() {
+            // API已准备就绪，但我们不会立即创建播放器
+            console.log('YouTube API is ready');
+        }
+    </script>
+</body>
+</html>
