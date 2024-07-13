@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中文歌曲卡拉OK学习工具</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
@@ -13,7 +12,7 @@
             padding: 20px;
             background-color: #f0f0f0;
         }
-        h1 {
+        h1, h2 {
             color: #d32f2f;
             text-align: center;
         }
@@ -28,7 +27,7 @@
             display: block;
             margin-bottom: 10px;
         }
-        input[type="text"] {
+        input[type="text"], textarea {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
@@ -42,6 +41,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-right: 10px;
         }
         button:hover {
             background-color: #45a049;
@@ -50,6 +50,15 @@
             white-space: pre-wrap;
             font-size: 18px;
             line-height: 1.6;
+        }
+        .lyric-line {
+            margin-bottom: 10px;
+        }
+        .hanzi {
+            font-weight: bold;
+        }
+        .pinyin {
+            color: #666;
         }
     </style>
 </head>
@@ -67,7 +76,15 @@
     </div>
     
     <div class="section">
-        <h2>歌词</h2>
+        <h2>输入歌词</h2>
+        <textarea id="lyricsInput" rows="10" placeholder="输入歌词汉字，每行一句"></textarea>
+        <button onclick="processLyrics()">生成拼音</button>
+        <button onclick="convertToTraditional()">转换为繁体</button>
+        <button onclick="convertToSimplified()">转换为简体</button>
+    </div>
+    
+    <div class="section">
+        <h2>歌词显示</h2>
         <div id="lyrics"></div>
     </div>
     
@@ -75,15 +92,12 @@
         <button onclick="downloadLyrics()">下载歌词</button>
     </div>
 
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.13.2/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chinese-conv@1.0.1/dist/index.min.js"></script>
     <script>
         let player;
-        let lyrics = "";
-
-        // 加载YouTube IFrame API
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        let lyrics = [];
 
         function loadVideo() {
             const videoUrl = document.getElementById('youtubeUrl').value;
@@ -114,25 +128,52 @@
         }
 
         function onPlayerReady(event) {
-            // 这里应该调用一个API来获取歌词，但由于我们没有实际的API，我们将使用示例歌词
-            lyrics = "你 好 (nǐ hǎo), 世 界 (shì jiè)！\n欢 迎 (huān yíng) 来 到 (lái dào) 中 文 (zhōng wén) 学 习 (xué xí) 工 具 (gōng jù)。";
-            document.getElementById('lyrics').innerText = lyrics;
+            console.log('Player is ready');
+        }
+
+        function processLyrics() {
+            const lyricsInput = document.getElementById('lyricsInput').value;
+            lyrics = lyricsInput.split('\n').map(line => {
+                return { 
+                    hanzi: line.trim(), 
+                    pinyin: pinyinPro.pinyin(line.trim(), { toneType: 'symbol', type: 'array' }).join(' ')
+                };
+            });
+            
+            displayLyrics();
+        }
+
+        function displayLyrics() {
+            const lyricsDiv = document.getElementById('lyrics');
+            lyricsDiv.innerHTML = lyrics.map(line => 
+                `<div class="lyric-line">
+                    <span class="hanzi">${line.hanzi}</span><br>
+                    <span class="pinyin">${line.pinyin}</span>
+                </div>`
+            ).join('');
+        }
+
+        function convertToTraditional() {
+            const lyricsInput = document.getElementById('lyricsInput');
+            lyricsInput.value = chineseConv.sify(lyricsInput.value);
+            processLyrics();
+        }
+
+        function convertToSimplified() {
+            const lyricsInput = document.getElementById('lyricsInput');
+            lyricsInput.value = chineseConv.tify(lyricsInput.value);
+            processLyrics();
         }
 
         function downloadLyrics() {
+            const lyricsText = lyrics.map(line => `${line.hanzi}\n${line.pinyin}`).join('\n\n');
             const element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(lyrics));
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(lyricsText));
             element.setAttribute('download', 'lyrics.txt');
             element.style.display = 'none';
             document.body.appendChild(element);
             element.click();
             document.body.removeChild(element);
-        }
-
-        // 当YouTube API准备就绪时，这个函数会被调用
-        function onYouTubeIframeAPIReady() {
-            // API已准备就绪，但我们不会立即创建播放器
-            console.log('YouTube API is ready');
         }
     </script>
 </body>
