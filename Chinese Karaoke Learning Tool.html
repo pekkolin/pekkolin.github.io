@@ -79,8 +79,7 @@
         <h2>输入歌词</h2>
         <textarea id="lyricsInput" rows="10" placeholder="输入歌词汉字，每行一句"></textarea>
         <button onclick="processLyrics()">生成拼音</button>
-        <button onclick="convertChinese('traditional')">转换为繁体</button>
-        <button onclick="convertChinese('simplified')">转换为简体</button>
+      
     </div>
     
     <div class="section">
@@ -151,14 +150,6 @@
                     <span class="pinyin">${line.pinyin}</span>
                 </div>`
             ).join('');
-        }
-
-        function convertChinese(type) {
-            const lyricsInput = document.getElementById('lyricsInput');
-            lyricsInput.value = type === 'traditional' 
-                ? chineseConv.sify(lyricsInput.value)  // 转换为繁体
-                : chineseConv.tify(lyricsInput.value); // 转换为简体
-            processLyrics();
         }
 
         function downloadLyrics() {
