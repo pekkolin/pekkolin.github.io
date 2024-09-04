@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维导图工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>思维导图工具</h1>
+        <textarea id="markdownInput" placeholder="请输入Markdown格式的思维导图文本..."></textarea>
+        <button id="generateBtn">生成思维导图</button>
+        <button id="downloadBtn" style="display: none;">下载思维导图</button>
+        <div id="mindmapContainer"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
