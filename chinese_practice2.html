@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese 3 Grammar Scramble</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 { color: #333; margin-bottom: 10px; }
+        p.subtitle { color: #666; margin-bottom: 30px; }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .prompt-box {
+            background: #eef5ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .prompt-english {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .grammar-hint {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* The area where students build the sentence */
+        .answer-area {
+            min-height: 80px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            transition: background 0.3s;
+        }
+
+        .answer-area.correct { border-color: var(--success); background: #edfbf3; }
+        .answer-area.wrong { border-color: var(--error); background: #fdedeb; }
+
+        /* The pool of scrambled words */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .word-tile {
+            background: white;
+            border: 2px solid var(--primary);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.5rem; /* Larger font for Chinese characters */
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .word-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: var(--primary);
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #checkBtn { background: var(--success); color: white; }
+        #checkBtn:hover { background: #27ae60; }
+
+        #resetBtn { background: #95a5a6; color: white; }
+        #resetBtn:hover { background: #7f8c8d; }
+
+        #nextBtn { background: var(--primary); color: white; display: none; }
+        #nextBtn:hover { background: #357abd; }
+
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            height: 24px;
+        }
+        .feedback.success { color: var(--success); }
+        .feedback.error { color: var(--error); }
+
+        /* End Screen */
+        #end-screen { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="game-screen">
+        <h1>Chinese Sentence Unscramble</h1>
+        <p class="subtitle">Click the words to move them into the correct order.</p>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <div class="prompt-box">
+            <div class="prompt-english" id="english-prompt">Loading...</div>
+            <div class="grammar-hint" id="grammar-hint">Hint...</div>
+        </div>
+
+        <div class="answer-area" id="answer-area"></div>
+
+        <div class="word-bank" id="word-bank"></div>
+
+        <div class="feedback" id="feedback-msg"></div>
+
+        <div class="controls">
+            <button id="resetBtn" onclick="resetCurrent()">Reset</button>
+            <button id="checkBtn" onclick="checkAnswer()">Check Answer</button>
+            <button id="nextBtn" onclick="nextQuestion()">Next Question &rarr;</button>
+        </div>
+    </div>
+
+    <div class="container" id="end-screen">
+        <h1>Great Job! 🎉</h1>
+        <p>You have completed the practice set.</p>
+        <button id="checkBtn" onclick="location.reload()">Start Over</button>
+    </div>
+
+    <script>
+        // Data Configuration: Add your sentences here
+        const questions = [
+            {
+                english: "As soon as he got home, he started doing homework.",
+                grammar: "Structure: 一 ... 就 ...",
+                segments: ["他", "一回家", "就", "开始", "做作业。"]
+            },
+            {
+                english: "This watermelon is both big and sweet.",
+                grammar: "Structure: 又 ... 又 ...",
+                segments: ["这个", "西瓜", "又大", "又甜。"]
+            },
+            {
+                english: "I have never been to China.",
+                grammar: "Structure: 没有 ... verb + 过 ...",
+                segments: ["我", "从来", "没有", "去过", "中国。"]
+            },
+            {
+                english: "After finishing dinner, we want to go watch a movie.",
+                grammar: "Structure: ... 之后 ...",
+                segments: ["吃完", "晚饭", "之后，", "我们要", "去看", "电影。"]
+            },
+            {
+                english: "Do you want to drink coffee or tea?",
+                grammar: "Structure: ... 还是 ... (Question)",
+                segments: ["你", "想", "喝咖啡", "还是", "喝茶？"]
+            },
+            {
+                english: "Learning Chinese well is very important to me.",
+                grammar: "Vocabulary: 重要 (Important)",
+                segments: ["学好", "中文", "对", "我", "很", "重要。"]
+            },
+            {
+                english: "It takes ten minutes to walk from here to school.",
+                grammar: "Structure: 从 ... 到 ...",
+                segments: ["从", "这里", "到", "学校", "要走", "十分钟。"]
+            },
+            {
+                english: "Even if it rains, I still want to go running.",
+                grammar: "Structure: 就算 ...，也 ...",
+                segments: ["就算", "下雨，", "我", "也", "要去", "跑步。"]
+            },
+            {
+                english: "We should practice speaking Chinese every day.",
+                grammar: "Vocabulary: 应该 (Should)",
+                segments: ["我们", "应该", "每天", "练习", "说", "中文。"]
+            },
+            {
+                english: "In the park there are elderly people, children, and also many puppies.",
+                grammar: "Structure: 有 ... 也有 ... 还有 ...",
+                segments: ["公园里", "有", "老人，", "也有", "孩子，", "还有", "很多", "小狗。"]
+            }
+        ];
+
+        let currentIdx = 0;
+        let currentSegments = []; // The current sentence broken into parts
+        let userArrangement = []; // What the user has clicked so far
+        let bankArrangement = []; // What remains in the bank
+
+        const englishEl = document.getElementById('english-prompt');
+        const hintEl = document.getElementById('grammar-hint');
+        const answerArea = document.getElementById('answer-area');
+        const wordBank = document.getElementById('word-bank');
+        const feedbackEl = document.getElementById('feedback-msg');
+        const checkBtn = document.getElementById('checkBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressFill = document.getElementById('progress');
+
+        function initGame() {
+            loadQuestion(0);
+        }
+
+        function loadQuestion(index) {
+            currentIdx = index;
+            const q = questions[index];
+            
+            // UI Updates
+            englishEl.textContent = q.english;
+            hintEl.textContent = q.grammar;
+            feedbackEl.textContent = "";
+            feedbackEl.className = "feedback";
+            answerArea.className = "answer-area";
+            checkBtn.style.display = "inline-block";
+            resetBtn.style.display = "inline-block";
+            nextBtn.style.display = "none";
+            
+            // Progress Bar
+            const percentage = (index / questions.length) * 100;
+            progressFill.style.width = `${percentage}%`;
+
+            // Setup Words
+            // Create a copy of segments to shuffle
+            bankArrangement = [...q.segments].sort(() => Math.random() - 0.5);
+            userArrangement = [];
+            
+            renderWords();
+        }
+
+        function renderWords() {
+            // Clear areas
+            answerArea.innerHTML = "";
+            wordBank.innerHTML = "";
+
+            // Render Answer Area
+            userArrangement.forEach((word, idx) => {
+                const tile = createTile(word, idx, 'answer');
+                answerArea.appendChild(tile);
+            });
+
+            // Render Bank Area
+            bankArrangement.forEach((word, idx) => {
+                const tile = createTile(word, idx, 'bank');
+                wordBank.appendChild(tile);
+            });
+        }
+
+        function createTile(text, index, location) {
+            const div = document.createElement('div');
+            div.className = 'word-tile';
+            div.textContent = text;
+            div.onclick = () => moveWord(text, index, location);
+            return div;
+        }
+
+        function moveWord(text, index, location) {
+            if (nextBtn.style.display === "inline-block") return; // Prevent moving after solved
+
+            if (location === 'bank') {
+                // Move from Bank to Answer
+                bankArrangement.splice(index, 1);
+                userArrangement.push(text);
+            } else {
+                // Move from Answer back to Bank
+                userArrangement.splice(index, 1);
+                bankArrangement.push(text);
+            }
+            renderWords();
+            // Reset visual cues
+            answerArea.className = "answer-area";
+            feedbackEl.textContent = "";
+        }
+
+        function resetCurrent() {
+            loadQuestion(currentIdx);
+        }
+
+        function checkAnswer() {
+            const q = questions[currentIdx];
+            const currentString = userArrangement.join("");
+            const correctString = q.segments.join("");
+
+            if (userArrangement.length === 0) {
+                feedbackEl.textContent = "Drag words to the top box first!";
+                feedbackEl.className = "feedback error";
+                return;
+            }
+
+            if (currentString === correctString) {
+                // Correct
+                feedbackEl.textContent = "Correct! (对)";
+                feedbackEl.className = "feedback success";
+                answerArea.className = "answer-area correct";
+                checkBtn.style.display = "none";
+                resetBtn.style.display = "none";
+                nextBtn.style.display = "inline-block";
+                
+                // If last question
+                if (currentIdx === questions.length - 1) {
+                    nextBtn.textContent = "Finish";
+                }
+            } else {
+                // Incorrect
+                feedbackEl.textContent = "Try again! (再试一次)";
+                feedbackEl.className = "feedback error";
+                answerArea.className = "answer-area wrong";
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIdx < questions.length - 1) {
+                loadQuestion(currentIdx + 1);
+            } else {
+                // End game
+                document.getElementById('game-screen').style.display = 'none';
+                document.getElementById('end-screen').style.display = 'block';
+            }
+        }
+
+        // Start
+        initGame();
+
+    </script>
+</body>
+</html>
