@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 心智图生成器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        /* 左侧编辑区 */
+        .editor-container {
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+            background: #f9f9f9;
+        }
+
+        .toolbar {
+            padding: 10px;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-download {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-download:hover {
+            background-color: #0056b3;
+        }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            resize: none;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            line-height: 1.5;
+        }
+
+        /* 右侧预览区 */
+        .preview-container {
+            width: 70%;
+            position: relative;
+            background: #ffffff;
+        }
+
+        #markmap-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+        }
+    </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-transformer@0.15.4"></script>
+</head>
+<body>
+
+    <div class="editor-container">
+        <div class="toolbar">
+            <strong>Markdown 输入</strong>
+            <button class="btn-download" onclick="downloadMap()">下载可收放 HTML</button>
+        </div>
+        <textarea id="input-md" placeholder="在此输入 Markdown...">
+# 中心主题
+
+## 分支 1
+- 子节点 A
+- 子节点 B
+  - 更深层节点
+  - 支持 **加粗** 和 *斜体*
+
+## 分支 2
+- [链接示例](https://google.com)
+- 多行文本
+  需要换行
+        </textarea>
+    </div>
+
+    <div class="preview-container">
+        <svg id="markmap-svg"></svg>
+    </div>
+
+    <script>
+        const { Transformer } = window.markmap;
+        const { Markmap, loadCSS, loadJS } = window.markmap;
+
+        const transformer = new Transformer();
+        const textarea = document.getElementById('input-md');
+        let mmInstance = null;
+
+        // 初始化预览
+        function updatePreview() {
+            const markdown = textarea.value;
+            // 转换 Markdown
+            const { root, features } = transformer.transform(markdown);
+            
+            // 如果需要加载 CSS/JS (例如数学公式或代码高亮)，这里处理 features
+            const { styles, scripts } = transformer.getAssets(features);
+            if (styles) loadCSS(styles);
+            if (scripts) loadJS(scripts, { getMarkmap: () => window.markmap });
+
+            if (mmInstance) {
+                mmInstance.setData(root);
+                mmInstance.fit();
+            } else {
+                mmInstance = Markmap.create('#markmap-svg', null, root);
+            }
+        }
+
+        // 监听输入变化
+        textarea.addEventListener('input', updatePreview);
+
+        // 首次加载
+        updatePreview();
+
+        // 下载功能核心逻辑
+        function downloadMap() {
+            const markdown = textarea.value;
+            
+            // 构建一个独立的 HTML 文件模板
+            const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的心智图</title>
+<style>
+* { margin: 0; padding: 0; }
+#mindmap { display: block; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-transformer@0.15.4"><\/script>
+<script>
+(() => {
+    const markdown = ${JSON.stringify(markdown)};
+    const { Transformer } = window.markmap;
+    const { Markmap } = window.markmap;
+    const transformer = new Transformer();
+    const { root } = transformer.transform(markdown);
+    Markmap.create('#mindmap', null, root);
+})();
+<\/script>
+</body>
+</html>`;
+
+            // 创建 Blob 并触发下载
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mindmap.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
