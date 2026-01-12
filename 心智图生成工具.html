@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 心智图生成器 (离线版)</title>
+    <style>
+        body { margin: 0; padding: 0; display: flex; height: 100vh; font-family: sans-serif; overflow: hidden; }
+        .editor-container { width: 30%; display: flex; flex-direction: column; border-right: 1px solid #ddd; background: #f9f9f9; }
+        .toolbar { padding: 10px; background: #fff; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        textarea { flex: 1; width: 100%; resize: none; border: none; padding: 15px; font-family: monospace; font-size: 14px; outline: none; box-sizing: border-box; }
+        .preview-container { width: 70%; position: relative; background: #fff; }
+        #markmap-svg { width: 100%; height: 100%; }
+        
+        /* 按钮样式 */
+        .btn-download {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .btn-download:hover { background-color: #218838; }
+        .btn-download:disabled { background-color: #94d3a2; cursor: wait; }
+    </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-transformer@0.15.4"></script>
+</head>
+<body>
+
+    <div class="editor-container">
+        <div class="toolbar">
+            <strong>Markdown 输入</strong>
+            <button id="dl-btn" class="btn-download" onclick="downloadOfflineMap()">下载离线版 HTML</button>
+        </div>
+        <textarea id="input-md" placeholder="在此输入 Markdown...">
+# 离线心智图
+
+## 优点
+- 不需要网络
+- 文件完全独立
+- 永久保存
+
+## 原理
+- 自动抓取 JS 库
+- 内嵌 D3.js
+- 内嵌 Markmap View
+- 预计算数据结构
+        </textarea>
+    </div>
+
+    <div class="preview-container">
+        <svg id="markmap-svg"></svg>
+    </div>
+
+    <script>
+        const { Transformer } = window.markmap;
+        const { Markmap, loadCSS, loadJS } = window.markmap;
+        const transformer = new Transformer();
+        const textarea = document.getElementById('input-md');
+        let mmInstance = null;
+
+        // 1. 实时预览逻辑
+        function updatePreview() {
+            const markdown = textarea.value;
+            const { root, features } = transformer.transform(markdown);
+            const { styles, scripts } = transformer.getAssets(features);
+            if (styles) loadCSS(styles);
+            if (scripts) loadJS(scripts, { getMarkmap: () => window.markmap });
+
+            if (mmInstance) {
+                mmInstance.setData(root);
+                mmInstance.fit();
+            } else {
+                mmInstance = Markmap.create('#markmap-svg', null, root);
+            }
+        }
+        textarea.addEventListener('input', updatePreview);
+        updatePreview();
+
+        // 2. 离线下载逻辑
+        async function downloadOfflineMap() {
+            const btn = document.getElementById('dl-btn');
+            const originalText = btn.innerText;
+            
+            try {
+                // UI 状态提示
+                btn.innerText = "正在打包资源(约需2秒)...";
+                btn.disabled = true;
+
+                // A. 准备数据：先将 Markdown 转换成 JSON 对象
+                // 这样下载的文件就不需要包含庞大的 Transformer 库了
+                const markdown = textarea.value;
+                const { root } = transformer.transform(markdown);
+                const rootJson = JSON.stringify(root);
+
+                // B. 获取 JS 库源码 (为了做成离线包，我们需要把库的代码抓取下来)
+                // 使用 fetch 并行下载 D3 和 Markmap-view 的源码
+                const d3Url = 'https://cdn.jsdelivr.net/npm/d3@7';
+                const viewUrl = 'https://cdn.jsdelivr.net/npm/markmap-view@0.15.4';
+                
+                // 并行请求以加快速度
+                const [d3Content, viewContent] = await Promise.all([
+                    fetch(d3Url).then(res => res.text()),
+                    fetch(viewUrl).then(res => res.text())
+                ]);
+
+                // C. 组装 HTML
+                const htmlContent = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>离线心智图</title>
+<style>
+    * { margin: 0; padding: 0; }
+    #mindmap { display: block; width: 100vw; height: 100vh; background: #fff; }
+</style>
+</head>
+<body>
+<svg id="mindmap"></svg>
+
+<script>
+${d3Content}
+<\/script>
+
+<script>
+${viewContent}
+<\/script>
+
+<script>
+(() => {
+    // 这里的 rootJson 是预先转换好的数据
+    const data = ${rootJson};
+    const { Markmap } = window.markmap;
+    
+    // 渲染心智图
+    Markmap.create('#mindmap', null, data);
+})();
+<\/script>
+</body>
+</html>`;
+
+                // D. 触发下载
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'mindmap_offline.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                alert('打包失败，请检查网络连接（需要联网一次以获取基础库）。\n错误信息: ' + error.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
