@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>把字句视觉教学海报</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 特教视觉支持专用颜色定义 */
+        .color-subject { color: #EE0000; }
+        .color-verb { color: #0000FF; }
+        .color-object { color: #008000; }
+        .color-modifier { color: #FFA500; }
+        
+        .bg-subject-light { background-color: #ffe5e5; }
+        .bg-verb-light { background-color: #e5e5ff; }
+        .bg-object-light { background-color: #e5ffe5; }
+        .bg-modifier-light { background-color: #fff0e5; }
+
+        .border-subject { border-color: #EE0000; }
+        .border-verb { border-color: #0000FF; }
+        .border-object { border-color: #008000; }
+        .border-modifier { border-color: #FFA500; }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* 模拟纸张质感 */
+        .poster-paper {
+            background-color: white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex justify-center">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- 内置 SVG 图标组件 (替换外部依赖以确保稳定性) ---
+
+        const User = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+        );
+
+        const Utensils = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+                <path d="M7 2v20" />
+                <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+            </svg>
+        );
+
+        const Hand = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
+                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+            </svg>
+        );
+
+        const ChefHat = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 9.08 0A5.11 5.11 0 0 1 18.59 6 4 4 0 0 1 20 13.87V21H6Z" />
+                <line x1="6" x2="20" y1="17" y2="17" />
+            </svg>
+        );
+
+        const Sparkles = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                <path d="M5 3 4 6 1 7 4 8 5 11 6 8 9 7 6 6 5 3z" />
+            </svg>
+        );
+
+        const Flame = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.5-3.3.3.8.9 1.5 1.7 2 .9.6 1.4 1.3 1.3 2.3Z" />
+            </svg>
+        );
+
+        const CheckCircle = ({ color = "currentColor", size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <path d="m9 11 3 3L22 4" />
+            </svg>
+        );
+
+        // --- 主海报组件 ---
+
+        const Poster = () => {
+            return (
+                <div className="poster-paper max-w-4xl w-full mx-auto p-6 md:p-10 rounded-xl border-t-8 border-yellow-500">
+                    
+                    {/* Header */}
+                    <div className="text-center mb-8 border-b-2 border-gray-100 pb-4">
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 tracking-wide">
+                            句型：谁 <span className="color-modifier">把</span> 东西 <span className="color-verb">怎么样了？</span>
+                        </h1>
+                        <p className="text-gray-500 mt-2 text-lg">Visual Grammar: The "Ba" Construction (Cooking)</p>
+                    </div>
+
+                    {/* Section 1: Formula */}
+                    <div className="mb-10 bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300 relative">
+                        <div className="absolute -top-4 left-6 bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold shadow-sm">
+                            区域一：结构公式
+                        </div>
+                        
+                        <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 text-xl md:text-2xl font-bold mt-2">
+                            {/* Subject */}
+                            <div className="flex flex-col items-center p-3 bg-subject-light rounded-lg border border-subject w-24 md:w-32">
+                                <User color="#EE0000" size={32} />
+                                <span className="color-subject mt-1">(人物)</span>
+                            </div>
+
+                            <span className="text-gray-400 text-2xl">+</span>
+
+                            {/* Ba Particle */}
+                            <div className="flex flex-col items-center p-3 bg-modifier-light rounded-lg border border-modifier w-24 md:w-32 relative">
+                                <Hand color="#FFA500" size={32} className="transform rotate-45"/>
+                                <span className="color-modifier mt-1">把 (Ba)</span>
+                                <div className="absolute -bottom-8 w-40 text-xs text-center text-gray-500 font-normal leading-tight">
+                                    Like a handle to pull the object forward
+                                </div>
+                            </div>
+
+                            <span className="text-gray-400 text-2xl">+</span>
+
+                            {/* Object */}
+                            <div className="flex flex-col items-center p-3 bg-object-light rounded-lg border border-object w-24 md:w-32">
+                                <Utensils color="#008000" size={32} />
+                                <span className="color-object mt-1">(食材)</span>
+                            </div>
+
+                            <span className="text-gray-400 text-2xl">+</span>
+
+                            {/* Verb/Result */}
+                            <div className="flex flex-col items-center p-3 bg-verb-light rounded-lg border border-verb w-32 md:w-40">
+                                <ChefHat color="#0000FF" size={32} />
+                                <span className="color-verb mt-1">(处理动作)</span>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-8 text-center bg-yellow-100 text-yellow-800 p-3 rounded-lg mx-auto max-w-2xl text-sm md:text-base font-medium">
+                            💡 Hint: "把 Ba" serves to pull the object to the front and tells us how it was handled.
+                        </div>
+                    </div>
+
+                    {/* Section 2: Core Example */}
+                    <div className="mb-10">
+                         <div className="flex items-center gap-2 mb-4">
+                            <span className="bg-red-500 w-2 h-8 rounded-full"></span>
+                            <h2 className="text-2xl font-bold text-gray-700">核心示例 Core Example</h2>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-6 items-center bg-white border-2 border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            
+                            {/* Visual Image */}
+                            <div className="w-full md:w-1/2 h-64 relative bg-gray-100 border-r border-gray-100 overflow-hidden group">
+                                <img 
+                                    src="cut.jpg" 
+                                    alt="切菜视觉还原：我站在案板前，手拿菜刀悬停，案板上的菜已切成整齐小块"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    onError={(e) => {
+                                        // Fallback if image fails to load
+                                        e.target.onerror = null; 
+                                        e.target.src = "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80";
+                                    }}
+                                />
+                                <div className="absolute top-2 right-2 bg-white/90 text-gray-800 text-xs font-bold px-2 py-1 rounded shadow-sm backdrop-blur-sm">
+                                    Visual Context
+                                </div>
+                            </div>
+
+                            {/* Text Analysis */}
+                            <div className="w-full md:w-1/2 p-6 flex flex-col justify-center items-center md:items-start">
+                                <div className="text-4xl md:text-5xl font-bold mb-4 flex flex-wrap justify-center gap-2">
+                                    <span className="color-subject">我</span>
+                                    <span className="color-modifier">把</span>
+                                    <span className="color-object">菜</span>
+                                    <span className="color-verb">切好了</span>
+                                </div>
+                                <div className="text-xl text-gray-500 font-mono tracking-wide mb-2">
+                                    wǒ bǎ cài qiē hǎo le
+                                </div>
+                                <div className="h-1 w-20 bg-gray-200 rounded my-3"></div>
+                                <p className="text-gray-500 italic">I cut the vegetables (and they are ready).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Parallel Examples */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="bg-blue-500 w-2 h-8 rounded-full"></span>
+                            <h2 className="text-2xl font-bold text-gray-700">场景拓展 More Examples</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            
+                            {/* Card 1 - Uploaded Image ba01.jpg */}
+                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
+                                <div className="h-48 relative bg-gray-100">
+                                    <img 
+                                        src="ba01.jpg" 
+                                        alt="视觉还原：双手捧着鱼冲洗"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback if image fails to load
+                                            e.target.onerror = null; 
+                                            e.target.src = "https://images.unsplash.com/photo-1535041422672-8d33d6b032d8?auto=format&fit=crop&w=800&q=80";
+                                        }}
+                                    />
+                                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                        <p className="text-white text-xs font-medium truncate">
+                                            视觉还原：双手捧着鱼冲洗
+                                        </p>
+                                     </div>
+                                </div>
+                                <div className="p-4 text-center flex-grow flex flex-col justify-center">
+                                    <p className="text-xl font-bold mb-1">
+                                        <span className="color-subject">爸爸</span> <span className="color-modifier">把</span> <span className="color-object">鱼</span><br/>
+                                        <span className="color-verb">洗干净了</span>
+                                    </p>
+                                    <p className="text-sm text-gray-400 font-mono">bà ba bǎ yú xǐ gān jìng le</p>
+                                </div>
+                            </div>
+
+                            {/* Card 2 - Uploaded Image ba02.jpg */}
+                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
+                                <div className="h-48 relative bg-gray-100">
+                                    <img 
+                                        src="ba02.jpg" 
+                                        alt="视觉还原：手调节火的大小，锅里的油冒出白色的青烟"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback if image fails to load
+                                            e.target.onerror = null; 
+                                            e.target.src = "https://images.unsplash.com/photo-1615937691194-97dbd3f3e69b?auto=format&fit=crop&w=800&q=80";
+                                        }}
+                                    />
+                                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                        <p className="text-white text-xs font-medium truncate">
+                                            视觉还原：油烧热了冒青烟
+                                        </p>
+                                     </div>
+                                </div>
+                                <div className="p-4 text-center flex-grow flex flex-col justify-center">
+                                    <p className="text-xl font-bold mb-1">
+                                        <span className="color-subject">厨师</span> <span className="color-modifier">把</span> <span className="color-object">油</span><br/>
+                                        <span className="color-verb">烧热了</span>
+                                    </p>
+                                    <p className="text-sm text-gray-400 font-mono">chú shī bǎ yóu shāo rè le</p>
+                                </div>
+                            </div>
+
+                            {/* Card 3 - Uploaded Image ba03.jpg */}
+                             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
+                                <div className="h-48 relative bg-gray-100">
+                                    <img 
+                                        src="ba03.jpg" 
+                                        alt="视觉还原：右手拿铲子翻炒，液体蛋液变固体，金黄色的块状"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // Fallback if image fails to load
+                                            e.target.onerror = null; 
+                                            e.target.src = "https://images.unsplash.com/photo-1566312693882-bfb81f1906c6?auto=format&fit=crop&w=800&q=80";
+                                        }}
+                                    />
+                                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                        <p className="text-white text-xs font-medium truncate">
+                                            视觉还原：鸡蛋炒熟变金黄
+                                        </p>
+                                     </div>
+                                </div>
+                                <div className="p-4 text-center flex-grow flex flex-col justify-center">
+                                    <p className="text-xl font-bold mb-1">
+                                        <span className="color-subject">妈妈</span> <span className="color-modifier">把</span> <span className="color-object">鸡蛋</span><br/>
+                                        <span className="color-verb">炒熟了</span>
+                                    </p>
+                                    <p className="text-sm text-gray-400 font-mono">mā ma bǎ jī dàn chǎo shú le</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {/* Footer Hint */}
+                    <div className="mt-10 border-t-2 border-dashed border-gray-300 pt-6 text-center">
+                        <p className="text-lg font-bold color-modifier animate-pulse">
+                            👀 Hint：Focus on the object! See how it changes after the action?
+                        </p>
+                    </div>
+
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Poster />);
+    </script>
+</body>
+</html>
