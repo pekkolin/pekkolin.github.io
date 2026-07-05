@@ -1,0 +1,423 @@
+Glyph Matrix Decoder:glyph_decoder.html
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字符号矩阵解密终端 (Glyph Matrix Decoder)</title>
+    <!-- 引入极具科技感的字体与 Tailwind CSS CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #020617 0%, #0b0f19 50%, #1e1b4b 100%);
+        background-image: radial-gradient(rgba(0, 245, 255, 0.08) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+      .glassmorphism {
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 245, 255, 0.15);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+      }
+      .neon-glow-cyan {
+        text-shadow: 0 0 10px rgba(0, 245, 255, 0.5), 0 0 20px rgba(0, 245, 255, 0.3);
+      }
+      .neon-glow-emerald {
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3);
+      }
+      /* 脉冲扫描线效果 */
+      .scanner {
+        position: relative;
+        overflow: hidden;
+      }
+      .scanner::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 3px;
+        background: #00F5FF;
+        box-shadow: 0 0 8px #00F5FF;
+        top: 0;
+        left: 0;
+        animation: scan 2s linear infinite;
+        opacity: 0.7;
+      }
+      @keyframes scan {
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
+      }
+    </style>
+  </head>
+  <body class="min-height-screen text-slate-100 p-4 md:p-8 flex flex-col justify-between">
+
+    <!-- 顶部特工状态栏 -->
+    <header class="max-w-4xl w-full mx-auto flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-800 pb-4">
+      <div class="text-center md:text-left mb-4 md:mb-0">
+        <h1 class="text-2xl font-bold tracking-wider text-[#00F5FF] neon-glow-cyan">👾 GLYPH MATRIX DECODER v1.0</h1>
+        <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">Active Decryption Protocol // Week 1 Day 2 Challenge</p>
+      </div>
+      <!-- 战术切换面板 -->
+      <div class="flex gap-2 bg-slate-950 p-1.5 rounded-full border border-slate-800">
+        <button id="btn-fusion" onclick="setMode('fusion')" class="px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-[#00F5FF] text-slate-950 shadow-[0_0_15px_rgba(0,245,255,0.4)]">FUSION REACTOR (合成)</button>
+        <button id="btn-fission" onclick="setMode('fission')" class="px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white">FISSION CHAMBER (拆解)</button>
+      </div>
+    </header>
+
+    <!-- 核心操作区 -->
+    <main class="max-w-3xl w-full mx-auto flex-grow flex flex-col justify-center items-center">
+      
+      <!-- 主反应炉 (Reactor Card) -->
+      <div class="w-full glassmorphism rounded-3xl p-6 md:p-8 text-center mb-6 scanner">
+        
+        <!-- 关卡与状态显示 -->
+        <div class="flex justify-between items-center mb-6 text-xs font-mono text-slate-400">
+          <span id="level-display" class="border border-slate-700 px-3 py-1 rounded-md">LEVEL: 01 / 05</span>
+          <span id="target-title" class="text-[#00F5FF]">MISSION OBJECTIVE</span>
+          <span id="score-display" class="border border-slate-700 px-3 py-1 rounded-md">DECRYPTED: 0 / 5</span>
+        </div>
+
+        <!-- 任务目标大屏幕 -->
+        <div class="py-6 mb-8 bg-slate-950/60 rounded-2xl border border-slate-800/80 relative">
+          <!-- 聚变模式下的目标提示 -->
+          <div id="fusion-objective" class="block">
+            <span class="text-xs text-slate-500 uppercase tracking-widest font-mono">Synthesize character for:</span>
+            <h2 id="target-meaning" class="text-3xl font-bold mt-2 text-white tracking-wide">Good / Okay / Wellness</h2>
+          </div>
+          <!-- 裂变模式下的目标字 -->
+          <div id="fission-objective" class="hidden">
+            <span class="text-xs text-slate-500 uppercase tracking-widest font-mono">Fission/Split this Glyph:</span>
+            <h2 id="fission-char" class="text-6xl font-bold mt-3 text-[#10B981] neon-glow-emerald">好</h2>
+          </div>
+
+          <!-- 熔合预览区 -->
+          <div class="flex justify-center gap-4 mt-6">
+            <div id="slot-1" class="w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl font-bold bg-slate-900/40 text-slate-400 transition-all">?</div>
+            <div class="flex items-center text-slate-500 font-bold text-xl" id="operator-symbol">+</div>
+            <div id="slot-2" class="w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl font-bold bg-slate-900/40 text-slate-400 transition-all">?</div>
+          </div>
+        </div>
+
+        <!-- 可供选择的符号元件池 (Component Pool) -->
+        <div class="mb-8">
+          <h3 class="text-xs text-slate-400 font-mono uppercase tracking-widest mb-4">Available Glyph Components</h3>
+          <div id="components-grid" class="grid grid-cols-6 gap-3 max-w-lg mx-auto">
+            <!-- JS 动态注入符号卡片 -->
+          </div>
+        </div>
+
+        <!-- 动作操作条 -->
+        <div class="flex justify-center gap-4">
+          <button onclick="resetSlots()" class="px-6 py-3 border border-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-800/50 hover:text-white transition-all">CLEAR (重置)</button>
+          <button id="action-btn" onclick="executeCoreProcess()" class="px-8 py-3 bg-[#00F5FF] hover:bg-[#00d8e2] text-slate-950 font-bold rounded-xl text-sm shadow-[0_0_15px_rgba(0,245,255,0.3)] hover:shadow-[0_0_25px_rgba(0,245,255,0.5)] transition-all uppercase tracking-wider">Execute Fusion (启动聚变)</button>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- 弹窗部分 A: 文化解码与成功徽章 (Success Modal) -->
+    <div id="success-modal" class="fixed inset-0 bg-slate-950/80 backdrop-filter backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="glassmorphism max-w-md w-full rounded-3xl p-6 md:p-8 text-center border-2 border-[#10B981]/40 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+        <div class="w-16 h-16 bg-[#10B981]/15 text-[#10B981] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#10B981]/30">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h3 class="text-2xl font-bold text-[#10B981] neon-glow-emerald">DECRYPTION SUCCESSFUL</h3>
+        <p class="text-xs text-slate-400 uppercase tracking-widest mt-1 font-mono">Glyph Security Protocol Unlocked</p>
+
+        <!-- 汉字演变与文化解释 (Cultural story) -->
+        <div class="my-6 bg-slate-950/70 p-5 rounded-2xl border border-slate-800 text-left">
+          <div class="flex items-center gap-3 mb-3">
+            <span id="modal-char" class="text-5xl font-extrabold text-white">好</span>
+            <div>
+              <span id="modal-pinyin" class="text-sm text-[#00F5FF] font-mono font-bold block">hǎo</span>
+              <span id="modal-meaning" class="text-xs text-slate-400 block">Good / Okay</span>
+            </div>
+          </div>
+          <p id="modal-story" class="text-sm text-slate-300 leading-relaxed border-t border-slate-800 pt-3 mt-3">
+            A woman (女) holding her baby (子) signifies protection, warmth, and the ultimate feeling of goodness and health.
+          </p>
+        </div>
+
+        <button onclick="nextLevel()" class="w-full py-3 bg-[#10B981] hover:bg-[#059669] text-white font-bold rounded-xl transition-all uppercase tracking-wider text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]">Proceed to Next Glyph (解锁下一个密码)</button>
+      </div>
+    </div>
+
+    <!-- 弹窗部分 B: 终极通关 Canvas Exit Ticket 生成器 -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-950/90 backdrop-filter backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+      <div class="glassmorphism max-w-lg w-full rounded-3xl p-6 md:p-8 text-center border-2 border-[#00F5FF]/40 shadow-[0_0_30px_rgba(0,245,255,0.2)]">
+        <h3 class="text-3xl font-extrabold text-[#00F5FF] neon-glow-cyan tracking-wider">🏆 DECIPHER COMPLETE</h3>
+        <p class="text-xs text-slate-400 uppercase tracking-widest mt-1 font-mono">Chinese Glyph Matrix Wholly Secured</p>
+
+        <p class="text-sm text-slate-300 my-6">
+          Congratulations, Agent! You have successfully decoded all 5 target Chinese glyphs and proved your alignment with the Pinyin Matrix squad[cite: 1]!
+        </p>
+
+        <!-- Exit Ticket 生成器 -->
+        <div class="bg-slate-950/70 p-5 rounded-2xl border border-slate-800 text-left mb-6">
+          <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Register Your Agent Codename:</label>
+          <div class="flex gap-2 mb-4">
+            <input id="agent-input" type="text" placeholder="e.g., Agent Lin" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white font-mono focus:outline-none focus:border-[#00F5FF]">
+            <button onclick="generateToken()" class="px-4 py-2 bg-[#00F5FF] text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider">MINT CODE</button>
+          </div>
+
+          <label class="block text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">Canvas Discussion Post Copy (Discussion Token):</label>
+          <div class="relative">
+            <textarea id="token-box" readonly class="w-full bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-300 h-24 resize-none focus:outline-none"></textarea>
+            <button onclick="copyToken()" class="absolute right-2 bottom-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-xs">COPY</button>
+          </div>
+        </div>
+
+        <button onclick="restartGame()" class="w-full py-3 border border-slate-700 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all uppercase tracking-wider text-sm">REBOOT PROTOCOL (重新开始)</button>
+      </div>
+    </div>
+
+    <!-- 底部状态显示 -->
+    <footer class="max-w-4xl w-full mx-auto text-center text-[10px] text-slate-500 font-mono uppercase tracking-widest mt-8 border-t border-slate-900 pt-4">
+      System Secured // MPS Summer Camp Security Matrix // Agent Lin Terminal
+    </footer>
+
+    <!-- 游戏逻辑 JS -->
+    <script>
+      // 1. 关卡数据 (对齐第一周拼音与常用高频字)
+      const levels = [
+        { id: 1, parts: ['女', '子'], target: '好', meaning: 'Good / Okay / Wellness', pinyin: 'hǎo', story: 'A woman (女) holding her baby (子) represents protection, care, and the ultimate feeling of goodness and peace.' },
+        { id: 2, parts: ['人', '木'], target: '休', meaning: 'Rest / Recess', pinyin: 'xiū', story: 'A person (人) leaning against a tree (木) represents taking a breath, shaded from the sun—resting.' },
+        { id: 3, parts: ['日', '月'], target: '明', meaning: 'Bright / Smart / Clear', pinyin: 'míng', story: 'Combining the two brightest light sources in nature: the Sun (日) and the Moon (月), creates brilliant brightness.' },
+        { id: 4, parts: ['门', '口'], target: '问', meaning: 'To Ask / To Inquire', pinyin: 'wèn', story: 'A mouth (口) showing up right inside a massive gate (门) signaling calling out or asking a question.' },
+        { id: 5, parts: ['木', '木'], target: '林', meaning: 'Forest / Woods / Squad', pinyin: 'lín', story: 'Two trees (木) standing close together side by side form a lush grove or forest—symbolizing unity and our squad[cite: 1]!' }
+      ];
+
+      // 所有可用的碎片池，打乱干扰视线
+      const componentsPool = ['女', '子', '人', '木', '日', '月', '门', '口', '火', '山', '十', '田'];
+
+      let currentMode = 'fusion'; // 'fusion' (合成) 或是 'fission' (拆解)
+      let currentLevelIndex = 0;
+      let selectedParts = [null, null];
+
+      // 初始化游戏
+      function initGame() {
+        resetSlots();
+        updateUI();
+        renderComponents();
+      }
+
+      // 切换模式（聚变 reactor 或是 裂变 chamber）
+      function setMode(mode) {
+        currentMode = mode;
+        
+        const btnFusion = document.getElementById('btn-fusion');
+        const btnFission = document.getElementById('btn-fission');
+        const optSymbol = document.getElementById('operator-symbol');
+        const actionBtn = document.getElementById('action-btn');
+
+        if (mode === 'fusion') {
+          btnFusion.className = "px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-[#00F5FF] text-slate-950 shadow-[0_0_15px_rgba(0,245,255,0.4)]";
+          btnFission.className = "px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white";
+          document.getElementById('fusion-objective').classList.remove('hidden');
+          document.getElementById('fission-objective').classList.add('hidden');
+          optSymbol.innerText = "+";
+          actionBtn.innerText = "Execute Fusion (启动聚变)";
+        } else {
+          btnFusion.className = "px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white";
+          btnFission.className = "px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-[#10B981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]";
+          document.getElementById('fusion-objective').classList.add('hidden');
+          document.getElementById('fission-objective').classList.remove('hidden');
+          optSymbol.innerText = "➔";
+          actionBtn.innerText = "Trigger Fission (裂变分解)";
+        }
+        
+        resetSlots();
+        updateUI();
+        renderComponents();
+      }
+
+      // 渲染元件池
+      function renderComponents() {
+        const grid = document.getElementById('components-grid');
+        grid.innerHTML = '';
+        
+        // 获取当前关卡所需的真元件
+        const level = levels[currentLevelIndex];
+        let pool = [];
+
+        if (currentMode === 'fusion') {
+          // 聚变模式：用户点击元件，将其放入 slot 1 或 2
+          pool = [...componentsPool];
+        } else {
+          // 裂变模式：目标是拆开字符。用户需要点击对应的部首
+          pool = [...componentsPool];
+        }
+
+        // 去重并洗牌以提升竞技感
+        pool = [...new Set(pool)].sort(() => 0.5 - Math.random());
+
+        pool.forEach(char => {
+          const btn = document.createElement('button');
+          btn.className = "w-12 h-12 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 text-lg font-bold flex items-center justify-center transition-all duration-150 active:scale-95";
+          btn.innerText = char;
+          btn.onclick = () => selectComponent(char);
+          grid.appendChild(btn);
+        });
+      }
+
+      // 点击元件
+      function selectComponent(char) {
+        if (selectedParts[0] === null) {
+          selectedParts[0] = char;
+          updateSlot('slot-1', char);
+        } else if (selectedParts[1] === null) {
+          selectedParts[1] = char;
+          updateSlot('slot-2', char);
+        }
+      }
+
+      // 刷新槽位显示
+      function updateSlot(slotId, char) {
+        const slot = document.getElementById(slotId);
+        slot.innerText = char;
+        slot.className = "w-16 h-16 rounded-xl border-2 border-solid border-[#00F5FF] flex items-center justify-center text-3xl font-extrabold bg-slate-900 text-white scale-105 transition-all duration-200 shadow-[0_0_15px_rgba(0,245,255,0.2)]";
+      }
+
+      // 清空槽
+      function resetSlots() {
+        selectedParts = [null, null];
+        const s1 = document.getElementById('slot-1');
+        const s2 = document.getElementById('slot-2');
+        s1.innerText = "?";
+        s1.className = "w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl font-bold bg-slate-900/40 text-slate-400 transition-all";
+        s2.innerText = "?";
+        s2.className = "w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 flex items-center justify-center text-2xl font-bold bg-slate-900/40 text-slate-400 transition-all";
+      }
+
+      // 更新关卡文本
+      function updateUI() {
+        const currentLevel = levels[currentLevelIndex];
+        
+        document.getElementById('level-display').innerText = `LEVEL: 0${currentLevelIndex + 1} / 05`;
+        document.getElementById('score-display').innerText = `DECRYPTED: ${currentLevelIndex} / 5`;
+        
+        if (currentMode === 'fusion') {
+          document.getElementById('target-meaning').innerText = currentLevel.meaning;
+        } else {
+          document.getElementById('fission-char').innerText = currentLevel.target;
+        }
+      }
+
+      // 执行主流程：核对密码！
+      function executeCoreProcess() {
+        const currentLevel = levels[currentLevelIndex];
+        const part1 = selectedParts[0];
+        const part2 = selectedParts[1];
+
+        if (!part1 || !part2) {
+          alert('WARNING: Unfinished configuration. Insert both symbols to run decryption.');
+          return;
+        }
+
+        let isCorrect = false;
+
+        if (currentMode === 'fusion') {
+          // 聚变逻辑：选中的 parts 和关卡的 parts 一致即可（不分顺序）
+          isCorrect = (
+            (part1 === currentLevel.parts[0] && part2 === currentLevel.parts[1]) ||
+            (part1 === currentLevel.parts[1] && part2 === currentLevel.parts[0])
+          );
+        } else {
+          // 裂变逻辑：把主字拆成两部分，所以选中的部首必须刚好可以拆成目标字
+          isCorrect = (
+            (part1 === currentLevel.parts[0] && part2 === currentLevel.parts[1]) ||
+            (part1 === currentLevel.parts[1] && part2 === currentLevel.parts[0])
+          );
+        }
+
+        if (isCorrect) {
+          triggerSuccessModal(currentLevel);
+        } else {
+          // 警报警示
+          const activeBorder = currentMode === 'fusion' ? 'border-[#EF4444]' : 'border-[#F59E0B]';
+          document.getElementById('slot-1').classList.add('border-red-500');
+          document.getElementById('slot-2').classList.add('border-red-500');
+          alert('DECRYPTION FAILURE: Code configuration mismatch. Try clearing the reactors.');
+          setTimeout(() => {
+            document.getElementById('slot-1').classList.remove('border-red-500');
+            document.getElementById('slot-2').classList.remove('border-red-500');
+          }, 1000);
+        }
+      }
+
+      // 触发成功文化弹窗
+      function triggerSuccessModal(level) {
+        document.getElementById('modal-char').innerText = level.target;
+        document.getElementById('modal-pinyin').innerText = level.pinyin;
+        document.getElementById('modal-meaning').innerText = level.meaning;
+        document.getElementById('modal-story').innerText = level.story;
+
+        document.getElementById('success-modal').classList.remove('hidden');
+      }
+
+      // 迈入下一关
+      function nextLevel() {
+        document.getElementById('success-modal').classList.add('hidden');
+        resetSlots();
+
+        if (currentLevelIndex < levels.length - 1) {
+          currentLevelIndex++;
+          updateUI();
+          renderComponents();
+        } else {
+          // 终极通关，弹出大奖章！
+          document.getElementById('victory-modal').classList.remove('hidden');
+        }
+      }
+
+      // 生成特工专属 Token 代币
+      function generateToken() {
+        const codename = document.getElementById('agent-input').value.trim() || 'Anonymous Agent';
+        const dateString = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        
+        const rawToken = `AGENT_MISSION_SUCCESS[${codename.toUpperCase()}]//DECRYPT_KEY:7/7//TOKEN_STAMP:${btoa(codename).substring(0, 8).toUpperCase()}`;
+        
+        const displayMessage = `🎙️ [AGENT DISPATCH LOG]
+===================================
+AGENT CODE: ${codename}
+MISSION STATUS: SECURED (通关成功)
+COMPLETED TARGETS: 女+子=好, 人+木=休, 日+月=明, 门+口=问, 木+木=林
+DATE STAMP: ${dateString}
+===================================
+Verification Key: ${rawToken}`;
+
+        document.getElementById('token-box').value = displayMessage;
+      }
+
+      // 复制 Token 到剪贴板
+      function copyToken() {
+        const tokenBox = document.getElementById('token-box');
+        if (!tokenBox.value) {
+          alert('Mint a token first using your Agent Codename!');
+          return;
+        }
+        tokenBox.select();
+        document.execCommand('copy');
+        alert('ACCESS TOKEN COPIED! Ready to paste into Canvas discussion forum[cite: 1]!');
+      }
+
+      // 重新启动
+      function restartGame() {
+        currentLevelIndex = 0;
+        document.getElementById('victory-modal').classList.add('hidden');
+        document.getElementById('agent-input').value = '';
+        document.getElementById('token-box').value = '';
+        initGame();
+      }
+
+      // 启动加载
+      window.onload = initGame;
+    </script>
+  </body>
+</html>
