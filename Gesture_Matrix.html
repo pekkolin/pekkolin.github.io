@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单手数字暗号训练终端 (The Gesture Matrix Trainer)</title>
+  <!-- 引入 Space Grotesk 与 Share Tech Mono 科技感字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    body {
+      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #020617 0%, #080d1a 50%, #1e1b4b 100%);
+      background-image: radial-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .font-mono-tech {
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .neon-border-cyan {
+      box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+      border-color: rgba(0, 245, 255, 0.4);
+    }
+    .neon-border-emerald {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .neon-text-cyan {
+      text-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+    }
+    .glass-morphic {
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    /* 赛博网格扫描线 */
+    .scanner-line {
+      position: relative;
+      overflow: hidden;
+    }
+    .scanner-line::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #00F5FF;
+      box-shadow: 0 0 8px #00F5FF;
+      top: 0;
+      left: 0;
+      animation: scan 3s linear infinite;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+    /* 闪烁报警灯 */
+    .alert-pulse {
+      animation: alertPulse 1.5s infinite;
+    }
+    @keyframes alertPulse {
+      0%, 100% { border-color: rgba(239, 68, 68, 0.3); background-color: rgba(239, 68, 68, 0.02); }
+      50% { border-color: rgba(239, 68, 68, 0.8); background-color: rgba(239, 68, 68, 0.12); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 p-4 md:p-8 flex flex-col justify-between" onload="initApp()">
+
+  <!-- 顶栏状态面板 -->
+  <header class="max-w-5xl w-full mx-auto flex flex-col md:flex-row justify-between items-center mb-6 border-b border-slate-800 pb-4">
+    <div class="text-center md:text-left mb-4 md:mb-0">
+      <h1 class="text-2xl font-bold tracking-wider text-[#00F5FF] neon-text-cyan">🎙️ THE GESTURE MATRIX</h1>
+      <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-mono-tech">Visual Signal Intercept Terminal // v1.0</p>
+    </div>
+    
+    <!-- 训练营模式热切换 -->
+    <div class="flex gap-2 bg-slate-950/80 p-1.5 rounded-full border border-slate-800">
+      <button id="btn-command" onclick="switchMode('command')" class="px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-[#00F5FF] text-slate-950 font-mono-tech shadow-[0_0_15px_rgba(0,245,255,0.3)]">
+        COMMAND DECK (无声拦截)
+      </button>
+      <button id="btn-solo" onclick="switchMode('solo')" class="px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white font-mono-tech">
+        SOLO TRAINING (单兵训练)
+      </button>
+      <button id="btn-codex" onclick="switchMode('codex')" class="px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white font-mono-tech">
+        CODEX (暗号图鉴)
+      </button>
+    </div>
+  </header>
+
+  <!-- 主操作台 -->
+  <main class="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-stretch">
+    
+    <!-- 左侧 5 列：特工战术摄像头 HUD 镜面 (增强沉浸感) -->
+    <section class="lg:col-span-5 flex flex-col justify-between gap-4">
+      <div class="glass-morphic rounded-3xl p-4 border border-slate-800 flex-grow flex flex-col justify-between relative overflow-hidden scanner-line">
+        <div class="absolute top-3 left-4 bg-slate-900/80 px-2 py-0.5 rounded text-[10px] font-mono-tech text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+          HUD Feed // Live Camera
+        </div>
+        
+        <!-- 摄像头渲染区 -->
+        <div class="my-auto flex flex-col items-center justify-center min-h-[220px] bg-slate-950/50 rounded-2xl border border-slate-900 relative">
+          <video id="webcam" class="w-full h-full object-cover rounded-2xl scale-x-[-1] hidden" autoplay playsinline muted></video>
+          <div id="camera-placeholder" class="text-center p-6 flex flex-col items-center">
+            <svg class="w-12 h-12 text-slate-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <p class="text-xs text-slate-400 max-w-[200px] leading-relaxed">Webcam stream offline. Click below to boot tactical camera mirror.</p>
+            <button onclick="bootWebcam()" class="mt-4 px-4 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono-tech rounded-lg uppercase tracking-wider transition-all">
+              Boot Camera (启用摄像头)
+            </button>
+          </div>
+          <!-- 绿幕雷达准心 -->
+          <div class="absolute inset-0 border border-emerald-500/10 pointer-events-none rounded-2xl flex items-center justify-center">
+            <div class="w-16 h-16 border border-emerald-500/10 rounded-full flex items-center justify-center">
+              <div class="w-4 h-4 border border-emerald-500/20 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="text-[10px] text-slate-500 font-mono-tech uppercase tracking-widest text-center mt-3">
+          Ensure hand gesture matches slide protocol [cite: 7]
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧 7 列：动态控制舱 -->
+    <section class="lg:col-span-7 flex flex-col">
+      
+      <!-- =========================================
+           A. 无声拦截模式 (COMMAND DECK)
+           ========================================= -->
+      <div id="pane-command" class="glass-morphic rounded-3xl p-6 md:p-8 flex flex-col justify-between flex-grow border border-slate-700/20">
+        <div class="flex justify-between items-center text-xs font-mono-tech text-slate-400">
+          <span class="border border-slate-700 px-3 py-1 rounded-md text-amber-500">DRILL: SILENT INTERCEPT</span>
+          <span id="cmd-telemetry">STATUS: IDLE</span>
+        </div>
+
+        <!-- 手势展示大视窗 -->
+        <div class="my-6 py-6 bg-slate-950/60 rounded-2xl border border-slate-800/80 relative text-center flex flex-col items-center justify-center min-h-[220px]">
+          <!-- SVG 手势图案动态注入 -->
+          <div id="cmd-svg-container" class="w-32 h-32 text-[#00F5FF] flex items-center justify-center mb-2">
+            <!-- 默认靶标 -->
+            <svg class="w-16 h-16 opacity-30 animate-spin" viewBox="0 0 100 100" style="animation-duration: 3s">
+              <circle cx="50" cy="50" r="40" stroke="#00F5FF" stroke-width="4" stroke-dasharray="10 5" fill="none"></circle>
+            </svg>
+          </div>
+          
+          <div id="cmd-instruction" class="text-xs text-slate-400 uppercase tracking-widest font-mono-tech mt-2">
+            Command Deck Standby // Click TRANSMIT to begin [cite: 7]
+          </div>
+          
+          <!-- 隐藏的解码答案 (2秒倒计时结束展现) -->
+          <div id="cmd-decoded-box" class="hidden mt-4 animate-bounce">
+            <span class="text-xs text-emerald-400 font-mono-tech block">▼ SIGNAL INTERCEPTED SUCCESSFUL ▼</span>
+            <span id="cmd-decoded-hanzi" class="text-5xl font-black text-white ml-2 block">六</span>
+            <span id="cmd-decoded-pinyin" class="text-lg text-[#00F5FF] font-mono-tech font-bold tracking-widest">liù</span>
+          </div>
+        </div>
+
+        <!-- 2 秒倒计时进度条 -->
+        <div class="w-full bg-slate-950/80 rounded-full h-3 overflow-hidden p-0.5 border border-slate-800 mb-6">
+          <div id="cmd-timer-bar" class="bg-gradient-to-r from-red-500 via-amber-500 to-[#00F5FF] h-full rounded-full transition-all duration-100 ease-linear" style="width: 0%"></div>
+        </div>
+
+        <!-- 指挥台动作 -->
+        <div class="flex gap-4">
+          <button onclick="stopCommandDrill()" class="w-1/3 py-3 border border-slate-700 hover:bg-slate-800/60 rounded-xl text-xs font-mono-tech uppercase tracking-wider transition-all">
+            ABORT (中止)
+          </button>
+          <button onclick="triggerCommandDrill()" class="w-2/3 py-3 bg-[#00F5FF] hover:bg-[#00e1ec] text-slate-950 font-extrabold rounded-xl text-xs uppercase tracking-widest font-mono-tech transition-all shadow-[0_0_15px_rgba(0,245,255,0.3)]">
+            TRANSMIT SIGN (启动拦截 - 2s 限时) [cite: 7]
+          </button>
+        </div>
+      </div>
+
+      <!-- =========================================
+           B. 单兵密码训练模式 (SOLO TRAINING)
+           ========================================= -->
+      <div id="pane-solo" class="hidden glass-morphic rounded-3xl p-6 md:p-8 flex flex-col justify-between flex-grow border border-slate-700/20">
+        <div class="flex justify-between items-center text-xs font-mono-tech text-slate-400">
+          <span class="border border-slate-700 px-3 py-1 rounded-md text-emerald-400" id="solo-level-display">CHAMBER: LEVEL 1/5</span>
+          <span id="solo-score-display">COMBO: 0</span>
+        </div>
+
+        <!-- 闯关题目大视窗 -->
+        <div class="my-4 py-4 bg-slate-950/60 rounded-2xl border border-slate-800/80 text-center flex flex-col items-center justify-center min-h-[160px]">
+          <div id="solo-svg-container" class="w-24 h-24 text-emerald-400 flex items-center justify-center mb-1">
+            <!-- 动态手势 -->
+          </div>
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-mono-tech">Decrypt this hand signal:</span>
+        </div>
+
+        <!-- 四选一选择题按键区 -->
+        <div class="grid grid-cols-2 gap-3 mb-6" id="solo-options">
+          <!-- 动态注入按钮 -->
+        </div>
+
+        <div class="flex gap-4">
+          <button onclick="resetSoloGame()" class="w-full py-2 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-mono-tech transition-all">
+            RESET SIMULATOR (重新初始化)
+          </button>
+        </div>
+      </div>
+
+      <!-- =========================================
+           C. 绝密暗号图鉴 (CODEX DATABASE)
+           ========================================= -->
+      <div id="pane-codex" class="hidden glass-morphic rounded-3xl p-6 border border-slate-700/20 flex-grow overflow-y-auto max-h-[500px]">
+        <h3 class="text-xs text-[#00F5FF] font-mono-tech uppercase tracking-widest mb-4">Tactical Codex Database // 单手暗号总表</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="codex-grid">
+          <!-- 动态灌入 11 个卡片 -->
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- =========================================
+       D. 终极通关弹窗 Canvas Exit Ticket
+       ========================================= -->
+  <div id="victory-modal" class="fixed inset-0 bg-slate-950/95 backdrop-filter backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-morphic max-w-lg w-full rounded-3xl p-6 md:p-8 text-center border border-[#00F5FF]/40 shadow-[0_0_30px_rgba(0,245,255,0.2)]">
+      <div class="w-16 h-16 bg-[#00F5FF]/10 text-[#00F5FF] border border-[#00F5FF]/30 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+      </div>
+      
+      <h3 class="text-2xl font-black text-[#00F5FF] tracking-wider uppercase">DECRYPTION COMPLETE</h3>
+      <p class="text-[10px] text-slate-400 font-mono-tech tracking-widest mt-1 uppercase">Pinyin Matrix Week 1 Day 5 Cleared [cite: 7]</p>
+      
+      <p class="text-xs text-slate-300 my-4 leading-relaxed">
+        Excellent work, Agent! You have successfully mastered all single-hand gesture codes from 0 to 10 in Mandarin and completed your first week of tactical training! [cite: 7]
+      </p>
+
+      <!-- Token 生成器 -->
+      <div class="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 text-left mb-6 font-mono-tech text-xs">
+        <label class="block text-[10px] uppercase text-slate-400 mb-2">Register Your Agent Alias:</label>
+        <div class="flex gap-2 mb-4">
+          <input id="agent-alias" type="text" placeholder="e.g., Agent Michael" class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-[#00F5FF]">
+          <button onclick="generateVictoryToken()" class="px-4 py-2 bg-[#00F5FF] text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider">MINT KEY</button>
+        </div>
+        
+        <label class="block text-[10px] uppercase text-slate-400 mb-2">Canvas Discussion Token:</label>
+        <div class="relative">
+          <textarea id="token-box" readonly class="w-full bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs h-20 resize-none focus:outline-none text-slate-300"></textarea>
+          <button onclick="copyVictoryToken()" class="absolute right-2 bottom-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-[10px]">COPY</button>
+        </div>
+      </div>
+
+      <button onclick="closeVictoryModal()" class="w-full py-2.5 border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs font-mono-tech uppercase tracking-widest transition-all">
+        CLOSE SIMULATOR (回到终端)
+      </button>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="max-w-5xl w-full mx-auto text-center text-[9px] text-slate-600 font-mono-tech uppercase tracking-widest mt-6 border-t border-slate-900 pt-4">
+    System Online // MPS Summer Camp Secret Agent Training Program // Agent Lin Dashboard
+  </footer>
+
+  <!-- =========================================
+       E. 游戏核心逻辑 Javascript
+       ========================================= -->
+  <script>
+    // 0-10 单手手势的精细 inline SVG 数据流
+    const gestureData = {
+      0: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- líng: 拳头 -->
+            <path d="M30 45c0-10 10-15 20-15s20 5 20 15v20c0 10-10 15-20 15s-20-5-20-15V45z"/>
+            <path d="M30 45h40M30 55h40M30 65h40"/>
+          </svg>`,
+      1: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- yī: 伸食指 -->
+            <path d="M50 75V25M50 25l-5 5M40 75h20"/>
+          </svg>`,
+      2: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- èr: 伸食指和中指 (V 手势) -->
+            <path d="M40 75V35M40 35l-5 5M60 75V25M60 25l-5 5M30 75h40"/>
+          </svg>`,
+      3: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- sān: 食指、中指、无名指 -->
+            <path d="M35 75V35M50 75V25M65 75V35M25 75h50"/>
+          </svg>`,
+      4: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- sì: 伸四个手指 -->
+            <path d="M30 75V30M43 75V25M56 75V25M69 75V30M20 75h60"/>
+          </svg>`,
+      5: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- wǔ: 五指张开 -->
+            <path d="M25 55c0-10 10-25 10-25s5 15 5 25M40 75V20M53 75V15M66 75V20M78 75V30M15 75h70"/>
+          </svg>`,
+      6: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- liù: 大拇指和小指 extended (Hang loose) -->
+            <path d="M25 35c0-10-10-5-15 5s20 35 40 35M50 75V55M75 35c0-10 10-5 15 5s-20 35-40 35"/>
+          </svg>`,
+      7: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- qī: 五指捏拢 (鸡嘴状) -->
+            <path d="M50 75c0-10-10-30-20-40s25-5 30 10c5 15-10 30-10 30z"/>
+            <path d="M30 35c5 5 15 5 20 0M45 45c5-5 10-5 10 5"/>
+          </svg>`,
+      8: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- bā: 大拇指和食指 (手枪状) -->
+            <path d="M25 45c-5-5-10-15 0-20s25 15 25 25M50 75V50M50 50h35M85 50l-5-5"/>
+          </svg>`,
+      9: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- jiǔ: 食指弯曲 (勾状) -->
+            <path d="M35 75h30V45c0-15-20-15-20 0"/>
+            <path d="M50 75H35M35 60h30"/>
+          </svg>`,
+      10: `<svg viewBox="0 0 100 100" class="w-full h-full stroke-current" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- shí: 两个食指交叉 -->
+            <path d="M50 20v60M20 50h60"/>
+          </svg>`
+    };
+
+    const dictionary = {
+      0: { hanzi: "零", pinyin: "líng", desc: "Closed fist // 握拳" },
+      1: { hanzi: "一", pinyin: "yī", desc: "Index finger pointing up // 单指" },
+      2: { hanzi: "二", pinyin: "èr", desc: "Scissors sign (V) // 剪刀手" },
+      3: { hanzi: "三", pinyin: "sān", desc: "Three fingers extended // 三指" },
+      4: { hanzi: "四", pinyin: "sì", desc: "Four fingers extended // 四指" },
+      5: { hanzi: "五", pinyin: "wǔ", desc: "Full open palm // 手掌张开" },
+      6: { hanzi: "六", pinyin: "liù", desc: "Thumb & Pinky extended // hang loose" },
+      7: { hanzi: "七", pinyin: "qī", desc: "All fingers pinched down // 捏拢" },
+      8: { hanzi: "八", pinyin: "bā", desc: "Thumb & Index extended // 手枪" },
+      9: { hanzi: "九", pinyin: "jiǔ", desc: "Index finger hooked // 弯曲" },
+      10: { hanzi: "十", pinyin: "shí", desc: "Crossed index fingers // 交叉" }
+    };
+
+    // App 全局状态变量
+    let currentMode = 'command'; 
+    let cmdActiveNumber = null;
+    let cmdTimerInterval = null;
+    let soloScore = 0;
+    let soloLevel = 1;
+    let soloCurrentTarget = null;
+
+    // 🔊 100% 物理合成的免签音效系统 (CORS-free Audio API)
+    function playBeep(freq, duration, waveType = 'sine') {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.type = waveType;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn("System audio driver block.", e);
+      }
+    }
+
+    // 初始化程序
+    function initApp() {
+      switchMode('command');
+      renderCodex();
+    }
+
+    // 页签模式切换
+    function switchMode(mode) {
+      currentMode = mode;
+      
+      const paneCmd = document.getElementById('pane-command');
+      const paneSolo = document.getElementById('pane-solo');
+      const paneCodex = document.getElementById('pane-codex');
+
+      const btnCmd = document.getElementById('btn-command');
+      const btnSolo = document.getElementById('btn-solo');
+      const btnCodex = document.getElementById('btn-codex');
+
+      // 隐藏所有面板
+      paneCmd.classList.add('hidden');
+      paneSolo.classList.add('hidden');
+      paneCodex.classList.add('hidden');
+
+      // 恢复按钮样式
+      btnCmd.className = "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white font-mono-tech";
+      btnSolo.className = "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white font-mono-tech";
+      btnCodex.className = "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white font-mono-tech";
+
+      if (mode === 'command') {
+        paneCmd.classList.remove('hidden');
+        btnCmd.className = "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-[#00F5FF] text-slate-950 font-mono-tech shadow-[0_0_15px_rgba(0,245,255,0.3)]";
+        stopCommandDrill();
+      } else if (mode === 'solo') {
+        paneSolo.classList.remove('hidden');
+        btnSolo.className = "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-[#10B981] text-slate-950 font-mono-tech shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+        initSoloGame();
+      } else {
+        paneCodex.classList.remove('hidden');
+        btnCodex.className = "px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 bg-slate-800 text-white font-mono-tech";
+      }
+    }
+
+    // =========================================
+    // 🎮 COMMAND DECK: 无声拦截逻辑
+    // =========================================
+    function triggerCommandDrill() {
+      // 1. 中止旧程序
+      clearInterval(cmdTimerInterval);
+      document.getElementById('cmd-decoded-box').classList.add('hidden');
+      document.getElementById('cmd-instruction').classList.remove('hidden');
+
+      // 2. 随机抽取一个暗号数字 (0 - 10)
+      cmdActiveNumber = Math.floor(Math.random() * 11);
+      
+      // 3. 注入 SVG
+      const container = document.getElementById('cmd-svg-container');
+      container.innerHTML = gestureData[cmdActiveNumber];
+      container.classList.add('animate-pulse');
+
+      document.getElementById('cmd-telemetry').innerText = "STATUS: TRANSMITTING...";
+      document.getElementById('cmd-instruction').innerText = "SILENT TRANSMISSION! SECURE POSITION IN 2s! [cite: 7]";
+      playBeep(600, 0.15, 'sawtooth');
+
+      // 4. 2秒雷达倒计时
+      let remaining = 2000; // 2000 毫秒
+      const timerBar = document.getElementById('cmd-timer-bar');
+      timerBar.style.width = "100%";
+
+      cmdTimerInterval = setInterval(() => {
+        remaining -= 100;
+        const percent = (remaining / 2000) * 100;
+        timerBar.style.width = `${percent}%`;
+
+        // 嘀嗒提示音 (1秒一滴，越接近越快)
+        if (remaining % 500 === 0 && remaining > 0) {
+          playBeep(1000, 0.05, 'sine');
+        }
+
+        // 倒计时结束
+        if (remaining <= 0) {
+          clearInterval(cmdTimerInterval);
+          revealCommandAnswer();
+        }
+      }, 100);
+    }
+
+    // 倒计时自然结束，显示答案
+    function revealCommandAnswer() {
+      const container = document.getElementById('cmd-svg-container');
+      container.classList.remove('animate-pulse');
+      
+      document.getElementById('cmd-telemetry').innerText = "STATUS: DECODED // BROADCAST";
+      document.getElementById('cmd-instruction').classList.add('hidden');
+      
+      // 注入答案
+      const data = dictionary[cmdActiveNumber];
+      document.getElementById('cmd-decoded-hanzi').innerText = data.hanzi;
+      document.getElementById('cmd-decoded-pinyin').innerText = data.pinyin;
+      
+      // 亮出答案卡
+      document.getElementById('cmd-decoded-box').classList.remove('hidden');
+      
+      // 震撼解锁声
+      playBeep(880, 0.2, 'sine');
+      setTimeout(() => playBeep(1200, 0.4, 'sine'), 100);
+    }
+
+    function stopCommandDrill() {
+      clearInterval(cmdTimerInterval);
+      document.getElementById('cmd-timer-bar').style.width = "0%";
+      document.getElementById('cmd-decoded-box').classList.add('hidden');
+      document.getElementById('cmd-instruction').classList.remove('hidden');
+      document.getElementById('cmd-instruction').innerText = "Command Deck Standby // Click TRANSMIT to begin [cite: 7]";
+      document.getElementById('cmd-telemetry').innerText = "STATUS: IDLE";
+      document.getElementById('cmd-svg-container').innerHTML = `
+        <svg class="w-16 h-16 opacity-30 animate-spin" viewBox="0 0 100 100" style="animation-duration: 3s">
+          <circle cx="50" cy="50" r="40" stroke="#00F5FF" stroke-width="4" stroke-dasharray="10 5" fill="none"></circle>
+        </svg>`;
+    }
+
+    // =========================================
+    // 🎮 SOLO TRAINING: 单兵突击闯关
+    // =========================================
+    function initSoloGame() {
+      soloScore = 0;
+      soloLevel = 1;
+      loadSoloChallenge();
+    }
+
+    function resetSoloGame() {
+      if (confirm("Reset simulator progress? All current score records will be flushed.")) {
+        initSoloGame();
+      }
+    }
+
+    function loadSoloChallenge() {
+      document.getElementById('solo-level-display').innerText = `CHAMBER: LEVEL ${soloLevel}/5`;
+      document.getElementById('solo-score-display').innerText = `COMBO: ${soloScore}`;
+
+      // 1. 随机选出一个暗号数字
+      soloCurrentTarget = Math.floor(Math.random() * 11);
+      
+      // 2. 渲染 SVG 手势
+      const container = document.getElementById('solo-svg-container');
+      container.innerHTML = gestureData[soloCurrentTarget];
+
+      // 3. 生成包含正确答案的 4 选项
+      let optionPool = [soloCurrentTarget];
+      while (optionPool.length < 4) {
+        let rand = Math.floor(Math.random() * 11);
+        if (!optionPool.includes(rand)) {
+          optionPool.push(rand);
+        }
+      }
+      
+      // 打乱顺序
+      optionPool.sort(() => 0.5 - Math.random());
+
+      // 4. 渲染按钮
+      const optionsBox = document.getElementById('solo-options');
+      optionsBox.innerHTML = '';
+      
+      optionPool.forEach(num => {
+        const data = dictionary[num];
+        const btn = document.createElement('button');
+        btn.className = "py-3 bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-[#10B981] rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all duration-150 active:scale-95";
+        btn.innerHTML = `
+          <span class="text-xs text-[#10B981] font-mono-tech">${data.pinyin}</span>
+          <span class="text-xl text-white font-extrabold mt-1">${data.hanzi}</span>
+        `;
+        btn.onclick = () => submitSoloAnswer(num, btn);
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    // 提交答案判定
+    function submitSoloAnswer(selectedNum, btnElement) {
+      if (selectedNum === soloCurrentTarget) {
+        // 答对！
+        soloScore += 10;
+        playBeep(880, 0.15, 'sine');
+        btnElement.classList.remove('bg-slate-900', 'border-slate-800');
+        btnElement.classList.add('bg-emerald-950/40', 'border-emerald-500', 'text-emerald-400');
+
+        setTimeout(() => {
+          if (soloLevel < 5) {
+            soloLevel++;
+            loadSoloChallenge();
+          } else {
+            // 通关大获全胜！
+            playBeep(880, 0.1, 'sine');
+            setTimeout(() => playBeep(1200, 0.15, 'sine'), 100);
+            setTimeout(() => playBeep(1500, 0.4, 'sine'), 200);
+            document.getElementById('victory-modal').classList.remove('hidden');
+          }
+        }, 400);
+      } else {
+        // 答错！
+        playBeep(180, 0.3, 'sawtooth');
+        btnElement.classList.remove('bg-slate-900', 'border-slate-800');
+        btnElement.classList.add('bg-red-950/40', 'border-red-500', 'text-red-400');
+        
+        // 扣除连胜
+        soloScore = Math.max(0, soloScore - 5);
+        document.getElementById('solo-score-display').innerText = `COMBO: ${soloScore}`;
+
+        setTimeout(() => {
+          btnElement.className = "py-3 bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-[#10B981] rounded-xl text-sm font-bold flex flex-col items-center justify-center transition-all duration-150 active:scale-95";
+        }, 1000);
+      }
+    }
+
+    // =========================================
+    // 📖 CODEX: 绝密暗号图鉴
+    // =========================================
+    function renderCodex() {
+      const grid = document.getElementById('codex-grid');
+      grid.innerHTML = '';
+
+      for (let num = 0; num <= 10; num++) {
+        const data = dictionary[num];
+        const card = document.createElement('div');
+        card.className = "bg-slate-950/40 p-4 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-between text-center hover:border-[#00F5FF]/30 transition-all";
+        card.innerHTML = `
+          <div class="w-16 h-16 text-[#00F5FF] mb-2">${gestureData[num]}</div>
+          <div>
+            <span class="text-[10px] text-slate-500 font-mono-tech block">CODE: 0${num}</span>
+            <span class="text-xl font-black text-white">${data.hanzi} [${data.pinyin}]</span>
+            <p class="text-[9px] text-slate-400 leading-tight mt-1 px-1">${data.desc}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    // =========================================
+    // 🏅 VICTORY TOKEN GENERATOR: 成绩生成
+    // =========================================
+    function generateVictoryToken() {
+      const alias = document.getElementById('agent-alias').value.trim() || 'Stealth Agent';
+      const dateString = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      
+      const rawKey = `AGENT_PINYIN_SUCCESS[${alias.toUpperCase()}]//DECRYPT_LEVEL:100%//CODE_STAMP:${btoa(alias).substring(0,8).toUpperCase()}`;
+      
+      const dispatchLog = `[AGENT DISPATCH LOG] ============================
+AGENT ALIAS: ${alias} 
+MISSION LEVEL: WEEK 1 DAY 5 (SINGLE-HAND NUMBERS) [cite: 7]
+SURVIVAL SIGNAL SECURED: 0 - 10 DECODED IN FULL 
+TACTICAL DRILL COMBO STREAK: ${soloScore} POINTS [cite: 7]
+DATE LOCK-IN: ${dateString}
+================================================
+VERIFICATION SECURITY KEY:
+${rawKey}`;
+
+      document.getElementById('token-box').value = dispatchLog;
+      playBeep(1000, 0.15, 'sine');
+    }
+
+    function copyVictoryToken() {
+      const box = document.getElementById('token-box');
+      if (!box.value) {
+        alert("Please write your alias and click [MINT KEY] first!");
+        return;
+      }
+      box.select();
+      document.execCommand('copy');
+      alert("SUCCESS: Tactical Dispatch Key copied! Paste directly into your Canvas submission page! [cite: 1]");
+    }
+
+    function closeVictoryModal() {
+      document.getElementById('victory-modal').classList.add('hidden');
+      initSoloGame();
+    }
+
+    // =========================================
+    // 🎥 WEBCAM AUDIO-VISUAL MIRROR: 开启绿幕镜面
+    // =========================================
+    function bootWebcam() {
+      const video = document.getElementById('webcam');
+      const placeholder = document.getElementById('camera-placeholder');
+
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          width: 320,
+          height: 240,
+          facingMode: "user"
+        }
+      })
+      .then(stream => {
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        playBeep(1200, 0.15, 'sine');
+      })
+      .catch(err => {
+        alert("CAMERA LINK FAILURE: Ensure you granted webcam permissions on your Chromebook.");
+        console.warn(err);
+      });
+    }
+  </script>
+</body>
+</html>
