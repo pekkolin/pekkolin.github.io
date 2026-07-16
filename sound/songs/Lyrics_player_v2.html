@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinyin Matrix - Agent Identity Player v2.0</title>
+    <style>
+        :root {
+            --neon-blue: #00f0ff;
+            --neon-red: #ff0055;
+            --dark-bg: #0a0a12;
+            --panel-bg: #121225;
+            --text-muted: #8a8ab0;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .player-container {
+            width: 90%;
+            max-width: 650px;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px dashed rgba(0, 240, 255, 0.3);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .system-status {
+            font-size: 11px;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .system-status.active {
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+
+        .lyric-window {
+            height: 280px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            scroll-behavior: smooth;
+        }
+
+        .lyric-window::-webkit-scrollbar {
+            width: 6px;
+        }
+        .lyric-window::-webkit-scrollbar-thumb {
+            background: var(--neon-blue);
+            border-radius: 3px;
+        }
+
+        .lyric-line {
+            padding: 10px 5px;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .lyric-line.active {
+            color: #ffffff;
+            background: rgba(0, 240, 255, 0.15);
+            border-left: 4px solid var(--neon-blue);
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+        }
+
+        .lyric-zh {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .lyric-pinyin {
+            font-size: 14px;
+            color: var(--neon-blue);
+            margin-bottom: 4px;
+        }
+
+        .lyric-en {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 12px 30px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--neon-blue);
+            color: var(--dark-bg);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-stop {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+        }
+
+        .btn-stop:hover {
+            background: var(--neon-red);
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--neon-red);
+        }
+
+        audio {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="player-container">
+        <div class="header">
+            <div>
+                <span style="font-weight: bold; color: var(--neon-blue);">SECRET AGENT RADIO v2.0</span>
+                <div style="font-size: 10px; opacity: 0.6; margin-top: 2px;">PINYIN MATRIX // AUTO_SYNC_ACTIVE</div>
+            </div>
+            <div id="status-light" class="system-status">● SYSTEM STANDBY</div>
+        </div>
+
+        <div class="lyric-window" id="lyric-box">
+            <!-- 歌词加载区域 -->
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="play-btn" onclick="togglePlay()">PLAY MATRIX</button>
+            <button class="btn btn-stop" id="stop-btn" onclick="stopMatrix()">OFFLINE</button>
+        </div>
+    </div>
+
+    <!-- 关联您的本地 MP3 音频 -->
+    <audio id="audio-element" src="PinyinMatrix_AgentSong.mp3" preload="auto"></audio>
+
+    <script>
+        // ==========================================
+        // 🛠️ 战术微变控制面板（如果歌词偏快或偏慢，在这里调整）
+        // ==========================================
+        const OFFSET_DELAY = 10.5; // 默认前奏延迟 10.5 秒。如果歌词跑得比音乐快，就把这个数字调大（例如 11.5）；反之调小。
+
+        // 精准对齐 Suno 节奏的歌词相对时间轨（秒）
+        const lyricData = [
+            { time: 0.0, zh: "Yeah, Pinyin Matrix.", py: "Agent identity lock-down.", en: "Listen to the mic, tell me who you are..." },
+            { time: 10.5, zh: "你叫什么名字？", py: "Nǐ jiào shénme míngzi?", en: "What is your name?" },
+            { time: 14.0, zh: "什么名字？什么名字？", py: "shénme míngzi? shénme míngzi?", en: "What name? What name?" },
+            { time: 17.5, zh: "你叫什么名字？", py: "Nǐ jiào shénme míngzi?", en: "What is your name?" },
+            { time: 22.0, zh: "我叫中中！我叫中中！", py: "Wǒ jiào Zhōng Zhōng! Wǒ jiào Zhōng Zhōng!", en: "My name is Zhongzhong!" },
+            { time: 26.0, zh: "我叫文文！我叫文文！", py: "Wé n Wén! Wǒ jiào Wén Wén!", en: "My name is Wenwen!" },
+            { time: 31.0, zh: "我叫中中！我叫中中！", py: "Wǒ jiào Zhōng Zhōng! Wǒ jiào Zhōng Zhōng!", en: "My name is Zhongzhong!" },
+            { time: 36.0, zh: "我叫文文！我叫文文！", py: "Wén Wén! Wǒ jiào Wén Wén!", en: "My name is Wenwen!" },
+            { time: 42.0, zh: "我！你！他！她！", py: "wǒ! nǐ! tā! tā!", en: "I! You! He! She!" },
+            { time: 47.0, zh: "We are agents in the dark.", py: "Speak your name, leave your mark.", en: "（特工集结哨口令）" },
+            { time: 51.0, zh: "我叫中中！我叫中中！", py: "Wǒ jiào Zhōng Zhōng! Wǒ jiào Zhōng Zhōng!", en: "My name is Zhongzhong!" },
+            { time: 55.0, zh: "我叫文文！我叫文文！", py: "Wén Wén! Wǒ jiào Wén Wén!", en: "My name is Wenwen!" },
+            { time: 59.0, zh: "System secure.", py: "Agent identity confirmed.", en: "（系统安全，特工身份已确认）" }
+        ];
+
+        let isPlaying = false;
+        let syntheticTimer = null;
+        let startTime = 0;
+        let audioCtx = null;
+        let synthInterval = null;
+
+        // 渲染歌词
+        const lyricBox = document.getElementById('lyric-box');
+        lyricData.forEach((line, idx) => {
+            const div = document.createElement('div');
+            div.className = 'lyric-line';
+            div.id = `line-${idx}`;
+            div.innerHTML = `
+                <div class="lyric-zh">${line.zh}</div>
+                <div class="lyric-pinyin">${line.py}</div>
+                <div class="lyric-en">${line.en}</div>
+            `;
+            lyricBox.appendChild(div);
+        });
+
+        // 监听音频真正结束的事件，确保音乐绝对不被提前切断
+        const audio = document.getElementById('audio-element');
+        audio.addEventListener('ended', () => {
+            console.log("Audio track finished naturally.");
+            stopMatrix();
+        });
+
+        // 模拟 90 BPM 离线鼓点（仅在断网且没有 MP3 时作为兜底备用）
+        function startSynthBeats() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const tempo = 90; 
+            const quarterNoteDur = 60 / tempo;
+
+            let beatCount = 0;
+            synthInterval = setInterval(() => {
+                const now = audioCtx.currentTime;
+                
+                const kick = audioCtx.createOscillator();
+                const kickGain = audioCtx.createGain();
+                kick.connect(kickGain);
+                kickGain.connect(audioCtx.destination);
+                
+                kick.frequency.setValueAtTime(120, now);
+                kick.frequency.exponentialRampToValueAtTime(0.01, now + 0.3);
+                kickGain.gain.setValueAtTime(0.3, now);
+                kickGain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                kick.start(now);
+                kick.stop(now + 0.3);
+
+                if (beatCount % 2 === 1) {
+                    const snare = audioCtx.createOscillator();
+                    const snareGain = audioCtx.createGain();
+                    snare.type = 'triangle';
+                    snare.connect(snareGain);
+                    snareGain.connect(audioCtx.destination);
+                    
+                    snare.frequency.setValueAtTime(300, now);
+                    snareGain.gain.setValueAtTime(0.1, now);
+                    snareGain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    snare.start(now);
+                    snare.stop(now + 0.15);
+                }
+                beatCount++;
+            }, quarterNoteDur * 1000);
+        }
+
+        // 浏览器原生语音朗读（仅在无 MP3 时兜底使用）
+        function speakLine(text) {
+            if ('speechSynthesis' in window) {
+                const isEnglish = /^[A-Za-z\s.,!'-?]+$/.test(text);
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = isEnglish ? 'en-US' : 'zh-CN';
+                utterance.rate = 1.1; 
+                utterance.pitch = 0.9; 
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function togglePlay() {
+            const playBtn = document.getElementById('play-btn');
+            const statusLight = document.getElementById('status-light');
+
+            if (!isPlaying) {
+                isPlaying = true;
+                playBtn.innerText = "PAUSE MATRIX";
+                statusLight.innerText = "● SYSTEM ACTIVE // SYNC_ON";
+                statusLight.className = "system-status active";
+                
+                // 优先尝试播放您提供的本地 MP3 文件
+                audio.play().then(() => {
+                    startTime = Date.now() - (audio.currentTime * 1000);
+                    runLyricEngine(true);
+                }).catch(err => {
+                    console.log("No local MP3 found or blocked. Transitioning to browser synthesis.");
+                    startSynthBeats();
+                    startTime = Date.now();
+                    runLyricEngine(false);
+                });
+            } else {
+                pauseMatrix();
+            }
+        }
+
+        // 核心滚动引擎
+        function runLyricEngine(usingAudio) {
+            syntheticTimer = setInterval(() => {
+                // 如果使用音频，以音频时间为基准；否则以本地计时器为基准
+                const elapsed = usingAudio ? audio.currentTime : (Date.now() - startTime) / 1000;
+                
+                let activeIdx = -1;
+                for (let i = 0; i < lyricData.length; i++) {
+                    // 如果是第一行，直接从 0 秒开始高亮；
+                    // 其他行则自动应用我们在上方配置的 OFFSET_DELAY 偏移量！
+                    const targetTime = i === 0 ? 0 : lyricData[i].time;
+                    if (elapsed >= targetTime) {
+                        activeIdx = i;
+                    }
+                }
+
+                if (activeIdx !== -1) {
+                    document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('active'));
+                    
+                    const activeLine = document.getElementById(`line-${activeIdx}`);
+                    if (activeLine && !activeLine.classList.contains('active')) {
+                        activeLine.classList.add('active');
+                        activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // 仅在完全没有 MP3 音频作为兜底时，才触发文字转语音
+                        if (!usingAudio) {
+                            speakLine(lyricData[activeIdx].zh);
+                        }
+                    }
+                }
+            }, 100);
+        }
+
+        function pauseMatrix() {
+            isPlaying = false;
+            document.getElementById('play-btn').innerText = "PLAY MATRIX";
+            document.getElementById('status-light').innerText = "● SYSTEM PAUSED";
+            document.getElementById('status-light').className = "system-status";
+            
+            audio.pause();
+            clearInterval(syntheticTimer);
+            clearInterval(synthInterval);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function stopMatrix() {
+            isPlaying = false;
+            document.getElementById('play-btn').innerText = "PLAY MATRIX";
+            document.getElementById('status-light').innerText = "● SYSTEM STANDBY";
+            document.getElementById('status-light').className = "system-status";
+            
+            audio.pause();
+            audio.currentTime = 0;
+            
+            clearInterval(syntheticTimer);
+            clearInterval(synthInterval);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            
+            document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('active'));
+            const firstLine = document.getElementById('line-0');
+            if (firstLine) firstLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>
