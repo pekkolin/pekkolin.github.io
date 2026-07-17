@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全球身份解码终端 (Holographic Global Cover Player v3.0)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #020617 0%, #030712 50%, #11072a 100%);
+      background-image: radial-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .font-mono-tech {
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .glass-morphic {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    /* 霓虹发光边框 */
+    .neon-cyan {
+      box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
+      border-color: rgba(0, 245, 255, 0.3);
+    }
+    .neon-red {
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    /* 歌词动态视窗过渡 */
+    .lyric-line {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .lyric-active {
+      color: #00F5FF;
+      text-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
+      transform: scale(1.05);
+      font-weight: 700;
+    }
+    /* 全息双侧面板闪烁动画 */
+    @keyframes flashBlue {
+      0%, 100% { background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2); }
+      50% { background: rgba(0, 245, 255, 0.25); border-color: #00F5FF; box-shadow: 0 0 25px rgba(0, 245, 255, 0.5); }
+    }
+    @keyframes flashRed {
+      0%, 100% { background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2); }
+      50% { background: rgba(239, 68, 68, 0.25); border-color: #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+    }
+    .flash-blue-active {
+      animation: flashBlue 0.8s ease-in-out infinite;
+    }
+    .flash-red-active {
+      animation: flashRed 0.8s ease-in-out infinite;
+    }
+    /* 自定义滑块 */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00F5FF;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00F5FF;
+    }
+    /* 隐藏滚动条 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 p-4 md:p-6 flex flex-col justify-between overflow-x-hidden">
+
+  <!-- 顶部科技感控制台信息 -->
+  <header class="w-full max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-6 border-b border-slate-800 pb-4">
+    <div>
+      <h1 class="text-xl font-bold tracking-wider text-[#00F5FF]">🛰️ DEEP_COVER_CONSOLE v3.0</h1>
+      <p class="text-[10px] text-slate-400 uppercase tracking-widest font-mono-tech">Global Nationality Integration Unit // Real-time Sync Calibration</p>
+    </div>
+    <div class="flex gap-2 mt-4 md:mt-0 bg-slate-950/80 p-1.5 rounded-full border border-slate-800 text-xs font-mono-tech">
+      <span class="px-3 py-1 text-emerald-400 animate-pulse">● AGENT_AUDIO_MATRIX_ONLINE</span>
+    </div>
+  </header>
+
+  <!-- 主操作网格 -->
+  <main class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-stretch">
+    
+    <!-- 左侧 3 列：美国鹰全息防波盾看板 -->
+    <section id="panel-usa" class="lg:col-span-3 glass-morphic rounded-3xl p-5 border border-slate-800/80 flex flex-col justify-between items-center text-center transition-all duration-300">
+      <div>
+        <span class="text-[9px] text-blue-400 font-mono-tech tracking-widest uppercase block mb-2">🦅 EAGLE SQUAD DEFENSE</span>
+        <h3 class="text-xs font-bold text-white mb-4">美国特工掩护身份 (US)</h3>
+      </div>
+      
+      <!-- 鹰全息 SVG 动图 -->
+      <div class="my-auto text-blue-400">
+        <svg class="w-24 h-24 stroke-current" viewBox="0 0 100 100" fill="none" stroke-width="2">
+          <path d="M20 30l30-10 30 10v30c0 15-15 20-30 25-15-5-30-10-30-25V30z" stroke-dasharray="4 2"/>
+          <path d="M50 35c-5 0-10 10-10 15h20c0-5-5-15-10-15zm-15 15h30l-15 20-15-20z" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="42" stroke-dasharray="2 6" />
+        </svg>
+      </div>
+
+      <div class="mt-4">
+        <div class="text-sm font-bold text-blue-400 font-mono-tech">Měiguó rén</div>
+        <div class="text-[10px] text-slate-500 uppercase mt-1">U.S. Cover Matrix</div>
+      </div>
+    </section>
+
+    <!-- 中间 6 列：全息歌词滚动视窗及控制器 -->
+    <section class="lg:col-span-6 flex flex-col justify-between gap-5">
+      
+      <!-- 歌词主视窗 -->
+      <div class="glass-morphic rounded-3xl p-6 border border-slate-800/80 flex-grow flex flex-col justify-between overflow-hidden relative">
+        <div class="flex justify-between items-center text-[10px] font-mono-tech text-slate-500 mb-3 pb-2 border-b border-slate-900">
+          <span>📡 HOLOGRAPHIC SCROLL ACTIVE</span>
+          <span class="text-[#00F5FF]">CALIBRATION SYNC ACTIVE</span>
+        </div>
+
+        <!-- 滚动区域 -->
+        <div id="lyric-scroller" class="flex-grow overflow-y-auto no-scrollbar py-4 space-y-6 flex flex-col text-center h-[260px]">
+          <!-- 歌词每一行 -->
+          <!-- 动态注入 -->
+        </div>
+
+        <div class="text-[9px] text-center text-slate-500 uppercase tracking-widest mt-2 font-mono-tech">
+          Target acquired // Double-click any line to listen
+        </div>
+      </div>
+
+      <!-- 实时校准和播放主控制台 -->
+      <div class="glass-morphic rounded-3xl p-5 border border-slate-800/80 flex flex-col gap-4">
+        
+        <!-- 一键时间轴实时变频滑块 -->
+        <div>
+          <div class="flex justify-between items-center text-xs font-mono-tech mb-2">
+            <span class="text-amber-500">⏱️ AUDIO CALIBRATOR (歌词时间轴校准器)</span>
+            <span id="delay-display" class="text-[#00F5FF] font-bold">OFFSET: 0.0s</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-[10px] text-slate-500 font-mono-tech">-5.0s</span>
+            <input id="calibration-range" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" oninput="updateCalibration(this.value)" class="flex-grow h-1">
+            <span class="text-[10px] text-slate-500 font-mono-tech">+5.0s</span>
+          </div>
+          <p class="text-[9px] text-slate-500 mt-1 uppercase font-mono-tech">Drag left/right to shift lyrics delay dynamically on Chromebook [cite: 1]</p>
+        </div>
+
+        <!-- 播放主控按钮 -->
+        <div class="bg-slate-950/60 p-3 rounded-2xl border border-slate-900 flex items-center justify-between">
+          <div class="flex items-center gap-3 text-left">
+            <!-- 仿生动态波形 -->
+            <div class="flex items-end gap-1 h-6 w-10" id="waveform-visualizer">
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+            </div>
+            <div>
+              <span id="track-title" class="text-xs font-bold block text-white font-mono-tech">CH-1: GLOBAL_COVER_IDENTITY_PHONK</span>
+              <span id="track-status" class="text-[9px] text-slate-500 font-mono-tech uppercase">STANDBY</span>
+            </div>
+          </div>
+          
+          <button id="btn-play" onclick="togglePlay()" class="w-11 h-11 rounded-full bg-[#00F5FF] hover:bg-[#00e1ec] text-slate-950 flex items-center justify-center transition-all duration-300 active:scale-95 shadow-[0_0_15px_rgba(0,245,255,0.3)]">
+            <svg id="play-icon" class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pause-icon" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 右侧 3 列：中国龙全息防波盾看板 -->
+    <section id="panel-china" class="lg:col-span-3 glass-morphic rounded-3xl p-5 border border-slate-800/80 flex flex-col justify-between items-center text-center transition-all duration-300">
+      <div>
+        <span class="text-[9px] text-red-500 font-mono-tech tracking-widest uppercase block mb-2">🐉 DRAGON SQUAD DEFENSE</span>
+        <h3 class="text-xs font-bold text-white mb-4">中国特工掩护身份 (CN)</h3>
+      </div>
+      
+      <!-- 龙全息 SVG 动图 -->
+      <div class="my-auto text-red-500">
+        <svg class="w-24 h-24 stroke-current" viewBox="0 0 100 100" fill="none" stroke-width="2">
+          <path d="M20 30l30-10 30 10v30c0 15-15 20-30 25-15-5-30-10-30-25V30z" stroke-dasharray="4 2"/>
+          <path d="M50 25c15 5 15 25 0 35-15-10-15-30 0-35zM35 55c5 15 25 15 30 0" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="42" stroke-dasharray="2 6" />
+        </svg>
+      </div>
+
+      <div class="mt-4">
+        <div class="text-sm font-bold text-red-500 font-mono-tech">Zhōngguó rén</div>
+        <div class="text-[10px] text-slate-500 uppercase mt-1">China Cover Matrix</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 隐藏的音频源 -->
+  <audio id="lyric-audio" src="Global_Cover_Identity_Phonk.mp3" preload="auto"></audio>
+
+  <!-- 页脚 -->
+  <footer class="w-full max-w-6xl mx-auto text-center text-[8px] text-slate-600 font-mono-tech uppercase tracking-widest mt-6 border-t border-slate-900 pt-4">
+    Fully Managed via Pinyin Matrix Protocols // Proximity Learning Inc. [cite: 1]
+  </footer>
+
+  <script>
+    // 精准对齐您给出的周二改版国籍歌词与时间轴数据 [cite: 1]
+    const lyricData = [
+      { time: 0.0,  zh: "Identify yourself, Agent.", py: "Bypass the border security.", en: "（系统指令：请确认你的特工身份，绕过边界防火墙）" },
+      { time: 4.5,  zh: "三、二、一、零！", py: "Sān, èr, yī, líng!", en: "Three, Two, One, Zero! (倒计时开始)" },
+      { time: 10.0, zh: "你是哪国人？", py: "Nǐ shì nǎ guó rén?", en: "What is your nationality?" },
+      { time: 12.0, zh: "我是美国人！", py: "Wǒ shì Měiguó rén!", en: "I am American!" },
+      { time: 14.0, zh: "你是哪国人？", py: "Nǐ shì nǎ guó rén?", en: "What is your nationality?" },
+      { time: 15.0, zh: "我是中国人！", py: "Wǒ shì Zhōngguó rén!", en: "I am Chinese!" },
+      { time: 16.0, zh: "你呢？", py: "Nǐ ne?", en: "And you?" },
+      { time: 17.0, zh: "你呢？", py: "Nǐ ne?", en: "And you?" },
+      { time: 18.5, zh: "We breach the wall, we secured the cover!", py: "Access granted.", en: "（我们突破了围墙，锁定了身份掩护，系统准入成功）" },
+      { time: 21.0, zh: "Your Global Cover is active.", py: "System shut down", en: "（全球身份掩护已激活，系统正在安全注销）" }
+    ];
+
+    let isPlaying = false;
+    let offsetVal = 0.0; // 实时微调延迟变量（Seconds） [cite: 1]
+    let playTimerInterval = null;
+    let fallbackInterval = null;
+    let audioCtx = null;
+    let fallbackStartTime = 0;
+    
+    // 初始化渲染歌词
+    const scroller = document.getElementById('lyric-scroller');
+    lyricData.forEach((line, index) => {
+      const div = document.createElement('div');
+      div.className = 'lyric-line opacity-30 text-slate-400 py-2 cursor-pointer rounded-xl hover:bg-slate-900/40 transition-all duration-300';
+      div.id = `lyric-line-${index}`;
+      div.onclick = () => speakSingleLine(line.zh, div);
+      div.innerHTML = `
+        <div class="text-xl font-black tracking-wide">${line.zh}</div>
+        <div class="text-xs text-emerald-400 font-mono-tech mt-1">${line.py}</div>
+        <div class="text-[10px] text-slate-500 italic mt-0.5">${line.en}</div>
+      `;
+      scroller.appendChild(div);
+    });
+
+    // 100% 离线合成 Cyber Phonk 战术鼓点 (90 BPM) [cite: 1]
+    function playSyntheticPhonk(time) {
+      if (!audioCtx) return;
+      
+      // 1. Kick 重低音大鼓
+      const oscKick = audioCtx.createOscillator();
+      const gainKick = audioCtx.createGain();
+      oscKick.connect(gainKick);
+      gainKick.connect(audioCtx.destination);
+      oscKick.frequency.setValueAtTime(140, time);
+      oscKick.frequency.exponentialRampToValueAtTime(0.01, time + 0.35);
+      gainKick.gain.setValueAtTime(0.3, time);
+      gainKick.gain.exponentialRampToValueAtTime(0.01, time + 0.35);
+      oscKick.start(time);
+      oscKick.stop(time + 0.35);
+
+      // 2. High-hat 科技感高频镲
+      if (Math.random() > 0.4) {
+        const oscHat = audioCtx.createOscillator();
+        const gainHat = audioCtx.createGain();
+        oscHat.connect(gainHat);
+        gainHat.connect(audioCtx.destination);
+        oscHat.type = 'triangle';
+        oscHat.frequency.setValueAtTime(8000, time);
+        gainHat.gain.setValueAtTime(0.03, time);
+        gainHat.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+        oscHat.start(time);
+        oscHat.stop(time + 0.05);
+      }
+    }
+
+    // 网页内置 Speech TTS 朗读 (100% 离线，方便纠音验证) [cite: 1]
+    function speakSingleLine(text, element) {
+      if ('speechSynthesis' in window) {
+        document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('lyric-active'));
+        if (element) element.classList.add('lyric-active');
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 1.0;
+        utterance.pitch = 0.95;
+        
+        utterance.onend = () => {
+          if (element) setTimeout(() => element.classList.remove('lyric-active'), 800);
+        };
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // 交互拖动滑块：实时校准时间轴
+    function updateCalibration(value) {
+      offsetVal = parseFloat(value);
+      document.getElementById('delay-display').innerText = `OFFSET: ${offsetVal > 0 ? '+' : ''}${offsetVal.toFixed(1)}s`;
+      playBeep(1200, 0.05, 'sine'); // 触发调试声
+    }
+
+    // 播放/暂停控制核心 [cite: 1]
+    function togglePlay() {
+      const audio = document.getElementById('lyric-audio');
+      const btnPlay = document.getElementById('btn-play');
+      const playIcon = document.getElementById('play-icon');
+      const pauseIcon = document.getElementById('pause-icon');
+      const statusEl = document.getElementById('track-status');
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (isPlaying) {
+        // 暂停
+        isPlaying = false;
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        statusEl.innerText = "PAUSED";
+        
+        audio.pause();
+        clearInterval(playTimerInterval);
+        clearInterval(fallbackInterval);
+        window.speechSynthesis.cancel();
+        stopWaveform();
+      } else {
+        // 播放
+        isPlaying = true;
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        statusEl.innerText = "PLAYING";
+
+        // 优先加载并播放您提供的全新 Global_Cover_Identity_Phonk.mp3
+        audio.play().then(() => {
+          runLyricSyncEngine(true);
+        }).catch(err => {
+          // 如果 MP3 加载报错或遭到 IT 掐断，1秒无感启动 Web Audio 原生离线合成！
+          console.log("MP3 direct load blocked or empty. Bypassing to synthetic offline generator.");
+          fallbackStartTime = Date.now();
+          startWaveform();
+          
+          // 运行本地 Web Audio 合成伴奏循环
+          let step = 0;
+          fallbackInterval = setInterval(() => {
+            const time = audioCtx.currentTime;
+            playSyntheticPhonk(time);
+            step++;
+          }, 330); // 90 BPM 差不多是这个微小间隔
+          
+          runLyricSyncEngine(false);
+        });
+      }
+    }
+
+    // 核心：基于实时时间轴计算 + 滑块偏移量校正的滚动引擎 [cite: 1]
+    function runLyricSyncEngine(usingAudio) {
+      const audio = document.getElementById('lyric-audio');
+      if (usingAudio) startWaveform();
+
+      playTimerInterval = setInterval(() => {
+        // 计算真实流逝时间，同时热插拔滑块 offsetVal 微调参数！ [cite: 1]
+        const rawTime = usingAudio ? audio.currentTime : (Date.now() - fallbackStartTime) / 1000;
+        const calibratedTime = rawTime + offsetVal;
+
+        let activeIndex = -1;
+        for (let i = 0; i < lyricData.length; i++) {
+          if (calibratedTime >= lyricData[i].time) {
+            activeIndex = i;
+          }
+        }
+
+        if (activeIndex !== -1) {
+          document.querySelectorAll('.lyric-line').forEach(el => {
+            el.classList.remove('lyric-active');
+            el.classList.add('opacity-30');
+          });
+
+          const activeLine = document.getElementById(`lyric-line-${activeIndex}`);
+          if (activeLine) {
+            activeLine.classList.add('lyric-active');
+            activeLine.classList.remove('opacity-30');
+            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 联动：如果没加载出真实 MP3 音频，则调用浏览器 TTS 朗读 [cite: 1]
+            if (!usingAudio && !window.speechSynthesis.speaking) {
+              speakSingleLine(lyricData[activeIndex].zh, null);
+            }
+
+            // 视觉特效：当唱到中国或美国时，交替闪烁全息面板 [cite: 7.2]
+            triggerFlagFlashing(lyricData[activeIndex].zh);
+          }
+        }
+
+        // 自然结束
+        if (usingAudio && audio.ended) {
+          stopMatrixPlayback();
+        }
+      }, 100);
+    }
+
+    // 面板联动霓虹闪烁 [cite: 7.2, 7.3]
+    function triggerFlagFlashing(text) {
+      const usa = document.getElementById('panel-usa');
+      const china = document.getElementById('panel-china');
+
+      if (text.includes("美国人")) {
+        usa.classList.add('flash-blue-active', 'neon-cyan');
+        china.classList.remove('flash-red-active', 'neon-red');
+      } else if (text.includes("中国人")) {
+        china.classList.add('flash-red-active', 'neon-red');
+        usa.classList.remove('flash-blue-active', 'neon-cyan');
+      } else {
+        usa.classList.remove('flash-blue-active', 'neon-cyan');
+        china.classList.remove('flash-red-active', 'neon-red');
+      }
+    }
+
+    // 终止播放重置
+    function stopMatrixPlayback() {
+      isPlaying = false;
+      document.getElementById('play-icon').classList.remove('hidden');
+      document.getElementById('pause-icon').classList.add('hidden');
+      document.getElementById('track-status').innerText = "STANDBY";
+
+      const audio = document.getElementById('lyric-audio');
+      audio.pause();
+      audio.currentTime = 0;
+
+      clearInterval(playTimerInterval);
+      clearInterval(fallbackInterval);
+      window.speechSynthesis.cancel();
+      stopWaveform();
+      triggerFlagFlashing("");
+
+      document.querySelectorAll('.lyric-line').forEach(el => {
+        el.classList.remove('lyric-active');
+        el.classList.add('opacity-30');
+      });
+      const first = document.getElementById('lyric-line-0');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 辅助物理音效
+    function playBeep(freq, dur, type) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    }
+
+    // 视觉波动动画
+    let visualizerTimer = null;
+    function startWaveform() {
+      const bars = document.querySelectorAll('#waveform-visualizer .bar');
+      visualizerTimer = setInterval(() => {
+        bars.forEach(bar => {
+          const randHeight = Math.floor(Math.random() * 20) + 4;
+          bar.style.height = `${randHeight}px`;
+        });
+      }, 100);
+    }
+
+    function stopWaveform() {
+      clearInterval(visualizerTimer);
+      document.querySelectorAll('#waveform-visualizer .bar').forEach(bar => bar.style.height = '4px');
+    }
+  </script>
+</body>
+</html>
