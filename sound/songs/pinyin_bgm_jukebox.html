@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特工战术 BGM 自动轮播唱机 v4.0 (Pinyin Matrix BGM Jukebox)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #020617 0%, #030816 50%, #1e1b4b 100%);
+      background-image: radial-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .font-mono-tech {
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .glass-morphic {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .neon-border-cyan {
+      box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
+      border-color: rgba(0, 245, 255, 0.3);
+    }
+    .neon-border-emerald {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    /* 隐藏滚动条 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* 模拟炫酷流光 */
+    @keyframes flowingLine {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .flowing-border {
+      background: linear-gradient(270deg, #00F5FF, #3b82f6, #10b981);
+      background-size: 600% 600%;
+      animation: flowingLine 6s ease infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 p-4 md:p-6 flex flex-col justify-between overflow-x-hidden">
+
+  <!-- 顶部科技感控制台 -->
+  <header class="w-full max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-6 border-b border-slate-800 pb-4">
+    <div>
+      <h1 class="text-xl font-bold tracking-wider text-[#00F5FF]">🛰️ BGM_TACTICAL_JUKEBOX v4.0</h1>
+      <p class="text-[10px] text-slate-400 uppercase tracking-widest font-mono-tech">Autonomous Playback Terminal // Real-time Spectral Analyzer</p>
+    </div>
+    <div class="flex gap-2 mt-4 md:mt-0 bg-slate-950/80 p-1.5 rounded-full border border-slate-800 text-xs font-mono-tech">
+      <span class="px-3 py-1 text-[#00F5FF] animate-pulse">● AUTOMATIC_STREAMING_ACTIVE</span>
+    </div>
+  </header>
+
+  <!-- 主操作网格 -->
+  <main class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-stretch">
+    
+    <!-- 左侧 5 列：控制器与 BGM 物理发生器 (控制区) -->
+    <section class="lg:col-span-5 flex flex-col gap-5 justify-between">
+      
+      <!-- 主控制器看板 -->
+      <div class="glass-morphic rounded-3xl p-5 border border-slate-800/80 flex flex-col justify-between">
+        <div>
+          <span class="text-[9px] text-[#00F5FF] font-mono-tech tracking-widest uppercase block mb-1">📟 HQ BGM COMPILER // 战术背景唱机</span>
+          <h2 id="current-track-title" class="text-base font-black text-white truncate max-w-[320px] mb-1">CH-0: SYSTEM STANDBY</h2>
+          <p id="current-track-status" class="text-[10px] text-slate-500 font-mono-tech uppercase">WAITING FOR TRANSMISSION CHANNEL...</p>
+        </div>
+
+        <!-- 3D 动态波形发生示波器 -->
+        <div class="my-5 bg-slate-950/60 rounded-2xl border border-slate-900 p-2 relative h-[140px] flex items-center justify-center">
+          <canvas id="spec-canvas" class="w-full h-full rounded-xl"></canvas>
+          <div id="vis-placeholder" class="absolute text-[10px] text-slate-600 font-mono-tech uppercase pointer-events-none">Spectral Analyzer Offline</div>
+        </div>
+
+        <!-- 播放控制按键矩阵 -->
+        <div class="flex items-center justify-between bg-slate-950/40 p-3 rounded-2xl border border-slate-900 mb-4">
+          <div class="flex items-center gap-3">
+            <!-- 播放模式切换按键 -->
+            <button id="btn-loop-mode" onclick="toggleLoopMode()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all font-mono-tech">
+              🔁 REPEAT ALL
+            </button>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <!-- 上一首 -->
+            <button onclick="playPrev()" class="w-10 h-10 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex items-center justify-center transition-all duration-200 active:scale-95">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <!-- 播放/暂停 -->
+            <button id="btn-play" onclick="togglePlayback()" class="w-12 h-12 rounded-full bg-[#00F5FF] hover:bg-[#00e1ec] text-slate-950 flex items-center justify-center transition-all duration-300 active:scale-95 shadow-[0_0_15px_rgba(0,245,255,0.3)]">
+              <svg id="play-icon" class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="pause-icon" class="w-6 h-6 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <!-- 下一首 -->
+            <button onclick="playNext()" class="w-10 h-10 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex items-center justify-center transition-all duration-200 active:scale-95">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6zm9-12h2v12h-2z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 战术载入接口 -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- 渠道 1: 一键载入本地文件夹 (Chrome & Chromebook 独家支持) -->
+          <div class="border border-slate-800 hover:border-[#00F5FF]/30 rounded-2xl p-3 text-center cursor-pointer transition-all bg-slate-950/10 relative flex flex-col justify-center min-h-[70px]">
+            <input type="file" id="dir-input" webkitdirectory directory multiple onchange="handleDirectoryLoad(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+            <span class="text-[10px] font-bold text-slate-300 block pointer-events-none leading-tight">📁 载入本地文件夹</span>
+            <span class="text-[8px] text-slate-500 font-mono-tech mt-0.5 block pointer-events-none">LOCAL DIRECTORY</span>
+          </div>
+
+          <!-- 渠道 2: 一键装填多个 MP3 文件 -->
+          <div class="border border-slate-800 hover:border-emerald-500/30 rounded-2xl p-3 text-center cursor-pointer transition-all bg-slate-950/10 relative flex flex-col justify-center min-h-[70px]">
+            <input type="file" id="files-input" accept="audio/*" multiple onchange="handleMultipleFilesLoad(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+            <span class="text-[10px] font-bold text-slate-300 block pointer-events-none leading-tight">🎶 多选载入 MP3 文件</span>
+            <span class="text-[8px] text-slate-500 font-mono-tech mt-0.5 block pointer-events-none">MULTIPLE AUDIO FILES</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 极客配置：云端链接管理器 (支持LocalStorage防断丢) -->
+      <div class="glass-morphic rounded-3xl p-5 border border-slate-800/80">
+        <div class="flex justify-between items-center text-xs font-mono-tech mb-2">
+          <span class="text-[#00F5FF]">🔗 CLOUD LINK DATABASE (云端备份直链)</span>
+          <button onclick="saveCloudLinks()" class="text-[9px] border border-emerald-500/30 px-2 py-0.5 rounded text-emerald-400 hover:bg-emerald-500/10 font-mono-tech">COMMIT CHANNELS</button>
+        </div>
+        <textarea id="cloud-urls-input" rows="4" placeholder="每行输入一个 GitHub 的 MP3 文件直链...&#10;http://.../boots.mp3&#10;http://.../nationality.mp3" class="w-full bg-slate-950/80 border border-slate-900 focus:border-[#00F5FF] rounded-xl p-3 text-[10px] text-slate-300 font-mono-tech focus:outline-none resize-none no-scrollbar"></textarea>
+        <span class="text-[8px] text-slate-500 block mt-1 uppercase font-mono-tech">Copy verbatim direct link from GitHub or OneDrive [cite: 1]</span>
+      </div>
+
+    </section>
+
+    <!-- 右侧 7 列：战术播放列表大视窗 (展示区) -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+      <div class="glass-morphic rounded-3xl p-5 border border-slate-800/80 flex-grow flex flex-col justify-between overflow-hidden relative">
+        <div class="flex justify-between items-center text-[10px] font-mono-tech text-slate-400 mb-4 pb-2 border-b border-slate-900">
+          <span>📡 PLAYLIST COMPILATION MODULE</span>
+          <span class="text-[#00F5FF]" id="playlist-count">0 TRACKS IN GRID</span>
+        </div>
+
+        <!-- 动态生成列表区域 -->
+        <div id="playlist-container" class="flex-grow overflow-y-auto no-scrollbar max-h-[360px] space-y-2 pr-1">
+          <!-- 默认无音轨指示 -->
+          <div id="playlist-empty" class="h-full flex flex-col items-center justify-center text-slate-500 py-12">
+            <svg class="w-12 h-12 stroke-current mb-3 opacity-30" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 0L21 9M19.5 6v12a3 3 0 11-6 0v-6a3 3 0 013-3h3z" />
+            </svg>
+            <p class="text-xs uppercase font-mono-tech">No active track decrypted.</p>
+            <p class="text-[10px] lowercase text-slate-600 mt-1 max-w-[250px] leading-relaxed text-center">Drag a folder inside or paste your GitHub links to sync your background Phonk rhythm! [cite: 1]</p>
+          </div>
+        </div>
+
+        <div class="text-[9px] text-center text-slate-500 uppercase tracking-widest mt-3 font-mono-tech">
+          💡 PRO-TIP: Double-click any track in the queue to jump straight to the source [cite: 1]
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 隐藏的主播放核心节点 -->
+  <audio id="audio-engine" crossorigin="anonymous"></audio>
+
+  <!-- 页脚 -->
+  <footer class="w-full max-w-6xl mx-auto text-center text-[8px] text-slate-600 font-mono-tech uppercase tracking-widest mt-4 border-t border-slate-900 pt-3">
+    Fully Managed via Pinyin Matrix Protocols // PLI Summer camp
+  </footer>
+
+  <script>
+    // =========================================================================
+    // ⚙️ 教师代码内硬编码区 (Ms. Lin's Default Playlist Configuration)
+    // 如果想实现一打开唱机自动就有歌曲，请在下方数组中填入您的默认 MP3 直链及歌曲名：
+    // =========================================================================
+    const DEFAULT_PLAYLIST = [
+      { name: "Pinyin Phonk Beatbox Theme", url: "PinyinBeetbox_boots.mp3" },
+      { name: "Global Cover Identity Phonk Theme", url: "Global_Cover_Identity_Phonk.mp3" }
+    ];
+
+    let playlist = [];
+    let currentIndex = -1;
+    let isPlaying = false;
+    let loopMode = 'all'; // 'all' | 'one' | 'shuffle'
+    let isInitialized = false;
+
+    // Web Audio API 示波混音通道
+    let audioCtx = null;
+    let audioSourceNode = null;
+    let analyserNode = null;
+    let canvas = null;
+    let canvasCtx = null;
+    let animationId = null;
+
+    const audioEngine = document.getElementById('audio-engine');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const trackTitle = document.getElementById('current-track-title');
+    const trackStatus = document.getElementById('current-track-status');
+
+    // 页面初始化装填
+    window.onload = function() {
+      setupCanvas();
+      
+      // 1. 读取 LocalStorage 缓存的云端直链，若没有则装填默认硬编码直链
+      const storedUrls = localStorage.getItem('bgm_jukebox_urls');
+      if (storedUrls) {
+        document.getElementById('cloud-urls-input').value = storedUrls;
+        parseAndLoadUrls(storedUrls);
+      } else {
+        // 如果全新 Chromebook 第一次打开，自动把代码中的 DEFAULT_PLAYLIST 加进歌单和输入框
+        let defaultText = "";
+        DEFAULT_PLAYLIST.forEach(track => {
+          defaultText += track.url + "\n";
+          playlist.push({ name: track.name, src: track.url, type: 'cloud' });
+        });
+        document.getElementById('cloud-urls-input').value = defaultText.trim();
+        renderPlaylist();
+      }
+
+      // 监听歌曲自然结束，无缝流转下一首
+      audioEngine.addEventListener('ended', () => {
+        handleTrackEnded();
+      });
+    };
+
+    // 初始化画布
+    function setupCanvas() {
+      canvas = document.getElementById('spec-canvas');
+      canvasCtx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    function resizeCanvas() {
+      if (canvas) {
+        canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+        canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+        canvasCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      }
+    }
+
+    // 初始化 Audio Graph（遵循用户手势触发原则）
+    function initAudioGraph() {
+      if (!isInitialized) {
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          audioSourceNode = audioCtx.createMediaElementSource(audioEngine);
+          analyserNode = audioCtx.createAnalyser();
+          
+          analyserNode.fftSize = 64; // 紧凑型高频波束
+          audioSourceNode.connect(analyserNode);
+          analyserNode.connect(audioCtx.destination);
+          
+          document.getElementById('vis-placeholder').classList.add('hidden');
+          isInitialized = true;
+          drawVisualizer();
+        } catch (e) {
+          console.warn("AudioContext init blocked or failed: ", e);
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // 动态波形渲染器 (频谱流动)
+    function drawVisualizer() {
+      animationId = requestAnimationFrame(drawVisualizer);
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserNode.getByteFrequencyData(dataArray);
+
+      const width = canvas.width / window.devicePixelRatio;
+      const height = canvas.height / window.devicePixelRatio;
+
+      canvasCtx.clearRect(0, 0, width, height);
+
+      const barWidth = (width / bufferLength) * 1.4;
+      let barHeight;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i] / 2;
+
+        // 赛博霓虹渐变色
+        const r = 0;
+        const g = Math.min(255, 100 + i * 4);
+        const b = Math.min(255, 240 + i * 2);
+
+        canvasCtx.fillStyle = `rgb(${r},${g},${b})`;
+        // 圆角高保真波柱
+        canvasCtx.beginPath();
+        canvasCtx.roundRect(x, height - barHeight / 1.5, barWidth - 4, barHeight / 1.5, 3);
+        canvasCtx.fill();
+
+        x += barWidth;
+      }
+    }
+
+    // 解析输入框中的直链
+    function parseAndLoadUrls(text) {
+      // 过滤掉原本的本地音源，保留最新的云端歌单
+      playlist = playlist.filter(track => track.type === 'local');
+      
+      const lines = text.split('\n');
+      lines.forEach((line) => {
+        const url = line.trim();
+        if (url && (url.startsWith('http') || url.endsWith('.mp3'))) {
+          // 自动美化截取歌名
+          const fileName = url.substring(url.lastIndexOf('/') + 1);
+          playlist.push({
+            name: decodeURIComponent(fileName).toUpperCase(),
+            src: url,
+            type: 'cloud'
+          });
+        }
+      });
+      renderPlaylist();
+    }
+
+    // 提交保存云端配置歌单到本地缓存 [cite: 1]
+    function saveCloudLinks() {
+      const text = document.getElementById('cloud-urls-input').value.trim();
+      localStorage.setItem('bgm_jukebox_urls', text);
+      parseAndLoadUrls(text);
+      
+      // 显示特工提交状态
+      trackStatus.innerText = "DATABASE COMMITTED & SECURED!";
+      setTimeout(() => {
+        if (!isPlaying) trackStatus.innerText = "STANDBY // SYSTEM SECURE";
+      }, 1500);
+    }
+
+    // 载入本地文件夹 (100% 离线、防拦截、支持大批量自动装填) [cite: 1]
+    function handleDirectoryLoad(event) {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      loadFilesIntoPlaylist(files);
+    }
+
+    // 多选载入本地 MP3 文件
+    function handleMultipleFilesLoad(event) {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      loadFilesIntoPlaylist(files);
+    }
+
+    // 将多文件或文件夹装填进 playlist 架构中 [cite: 1]
+    function loadFilesIntoPlaylist(files) {
+      // 停止当前播放，清空之前的本地文件，保留云端文件
+      forceStop();
+      playlist = playlist.filter(track => track.type === 'cloud');
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('audio/') || file.name.endsWith('.mp3') || file.name.endsWith('.wav')) {
+          playlist.push({
+            name: file.name.substring(0, file.name.lastIndexOf('.')).toUpperCase(),
+            src: URL.createObjectURL(file), // 利用浏览器内存 URL 直连播放
+            type: 'local'
+          });
+        }
+      }
+
+      renderPlaylist();
+      if (playlist.length > 0) {
+        playTrack(0); // 自动开始播放第一个解密音轨
+      }
+    }
+
+    // 渲染右侧动态播放队列卡片
+    function renderPlaylist() {
+      const container = document.getElementById('playlist-container');
+      const emptyBox = document.getElementById('playlist-empty');
+      const countEl = document.getElementById('playlist-count');
+
+      // 清空旧卡片
+      const cards = container.querySelectorAll('.track-card');
+      cards.forEach(card => card.remove());
+
+      if (playlist.length === 0) {
+        emptyBox.classList.remove('hidden');
+        countEl.innerText = "0 TRACKS IN GRID";
+        return;
+      }
+
+      emptyBox.classList.add('hidden');
+      countEl.innerText = `${playlist.length} TRACKS SECURED`;
+
+      playlist.forEach((track, index) => {
+        const card = document.createElement('div');
+        card.className = `track-card p-3 rounded-xl flex items-center justify-between cursor-pointer border transition-all duration-200 ${index === currentIndex ? 'border-[#00F5FF] bg-[#00F5FF]/10 neon-border-cyan' : 'border-slate-900 bg-slate-950/20 hover:border-slate-800'}`;
+        card.id = `track-${index}`;
+        card.ondblclick = () => playTrack(index);
+        card.innerHTML = `
+          <div class="flex items-center gap-3 truncate">
+            <span class="text-xs font-mono-tech text-slate-600">${(index + 1).toString().padStart(2, '0')}</span>
+            <div class="text-left truncate">
+              <span class="text-xs font-bold text-slate-200 block truncate max-w-[280px]">${track.name}</span>
+              <span class="text-[8px] text-slate-500 font-mono-tech uppercase">${track.type === 'local' ? '📁 LOCAL INTERMEDIATE' : '☁️ CLOUD LINK'}</span>
+            </div>
+          </div>
+          <!-- 正在播放微型跳动动画 -->
+          <div class="flex items-end gap-0.5 h-3 ${index === currentIndex && isPlaying ? 'block' : 'hidden'}">
+            <div class="w-0.5 bg-[#00F5FF] h-full animate-pulse" style="animation-duration: 0.6s"></div>
+            <div class="w-0.5 bg-[#00F5FF] h-2/3 animate-pulse" style="animation-duration: 0.4s"></div>
+            <div class="w-0.5 bg-[#00F5FF] h-1/3 animate-pulse" style="animation-duration: 0.8s"></div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // 播放指定索引音轨
+    function playTrack(index) {
+      if (index < 0 || index >= playlist.length) return;
+      initAudioGraph();
+
+      currentIndex = index;
+      const track = playlist[currentIndex];
+
+      audioEngine.src = track.src;
+      audioEngine.load();
+
+      audioEngine.play().then(() => {
+        isPlaying = true;
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        
+        trackTitle.innerText = track.name;
+        trackStatus.innerText = `PLAYING // CHANNEL_${(currentIndex+1).toString().padStart(2, '0')}`;
+        renderPlaylist();
+      }).catch(err => {
+        console.error("Playback error:", err);
+        trackStatus.innerText = "❌ STREAM FAILED - HOPPING NEXT";
+        setTimeout(() => playNext(), 1500); // 遇到IT强行切断/坏链，2秒无感跳过！
+      });
+    }
+
+    // 统一大播放按钮触发引擎
+    function togglePlayback() {
+      if (playlist.length === 0) return;
+      initAudioGraph();
+
+      if (currentIndex === -1) {
+        playTrack(0);
+        return;
+      }
+
+      if (isPlaying) {
+        audioEngine.pause();
+        isPlaying = false;
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        trackStatus.innerText = "PAUSED";
+        renderPlaylist();
+      } else {
+        audioEngine.play().then(() => {
+          isPlaying = true;
+          playIcon.classList.add('hidden');
+          pauseIcon.classList.remove('hidden');
+          trackStatus.innerText = `PLAYING // CHANNEL_${(currentIndex+1).toString().padStart(2, '0')}`;
+          renderPlaylist();
+        }).catch(err => console.error(err));
+      }
+    }
+
+    // 强制终止
+    function forceStop() {
+      isPlaying = false;
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
+      audioEngine.pause();
+      trackTitle.innerText = "CH-0: IDLE MODE";
+      trackStatus.innerText = "STANDBY // SYSTEM SECURE";
+    }
+
+    // 下一首 [cite: 1]
+    function playNext() {
+      if (playlist.length === 0) return;
+      
+      let nextIndex = currentIndex + 1;
+      if (loopMode === 'shuffle') {
+        nextIndex = Math.floor(Math.random() * playlist.length);
+      } else if (nextIndex >= playlist.length) {
+        nextIndex = 0;
+      }
+      playTrack(nextIndex);
+    }
+
+    // 上一首
+    function playPrev() {
+      if (playlist.length === 0) return;
+      
+      let prevIndex = currentIndex - 1;
+      if (loopMode === 'shuffle') {
+        prevIndex = Math.floor(Math.random() * playlist.length);
+      } else if (prevIndex < 0) {
+        prevIndex = playlist.length - 1;
+      }
+      playTrack(prevIndex);
+    }
+
+    // 歌曲自然结束无缝流转机制
+    function handleTrackEnded() {
+      if (loopMode === 'one') {
+        playTrack(currentIndex); // 单曲循环
+      } else {
+        playNext(); // 顺序或随机循环
+      }
+    }
+
+    // 切换播放/循环模式
+    function toggleLoopMode() {
+      const btn = document.getElementById('btn-loop-mode');
+      if (loopMode === 'all') {
+        loopMode = 'one';
+        btn.innerText = "🔂 REPEAT ONE";
+        btn.classList.add('border-emerald-500/40', 'text-emerald-400');
+      } else if (loopMode === 'one') {
+        loopMode = 'shuffle';
+        btn.innerText = "🔀 SHUFFLE";
+        btn.className = "px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all font-mono-tech text-amber-500 border-amber-500/40";
+      } else {
+        loopMode = 'all';
+        btn.innerText = "🔁 REPEAT ALL";
+        btn.className = "px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-all font-mono-tech text-slate-300";
+      }
+    }
+  </script>
+</body>
+</html>
