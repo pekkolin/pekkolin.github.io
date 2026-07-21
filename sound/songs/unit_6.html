@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特工部落手势舞全息播放终端 v4.0 (Family Squad Gesture Matrix Player)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #020617 0%, #030816 50%, #1e1b4b 100%);
+      background-image: radial-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .font-mono-tech {
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .glass-morphic {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .neon-border-cyan {
+      box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
+      border-color: rgba(0, 245, 255, 0.3);
+    }
+    .neon-border-[#FF0055] {
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.15);
+      border-color: rgba(255, 0, 85, 0.3);
+    }
+    .lyric-line {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .lyric-active {
+      color: #00F5FF;
+      text-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
+      transform: scale(1.05);
+      font-weight: 700;
+    }
+    /* 隐藏滚动条 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(0, 245, 255, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(0, 245, 255, 0.6); }
+    }
+    .active-gesture-card {
+      animation: pulseGlow 2s infinite;
+      border-color: #00F5FF !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 p-3 md:p-6 flex flex-col justify-between overflow-x-hidden">
+
+  <!-- 顶部科技感控制台 -->
+  <header class="w-full max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-4 border-b border-slate-800 pb-3">
+    <div>
+      <h1 class="text-xl font-bold tracking-wider text-[#00F5FF]">🛰️ SQUAD_GESTURE_PLAYER v4.0</h1>
+      <p class="text-[10px] text-slate-400 uppercase tracking-widest font-mono-tech">Unit 6 Family Squad Registry // Real-time Gesture Matrix</p>
+    </div>
+    <div class="flex gap-2 mt-3 md:mt-0 bg-slate-950/80 p-1.5 rounded-full border border-slate-800 text-xs font-mono-tech">
+      <span class="px-3 py-1 text-emerald-400 animate-pulse">● GESTURE_MATRIX_ONLINE</span>
+    </div>
+  </header>
+
+  <!-- 主操作网格 -->
+  <main class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow items-stretch">
+    
+    <!-- 左侧 5 列：特工手势舞聚焦展示框 & 控制台 -->
+    <section class="lg:col-span-5 flex flex-col justify-between gap-4">
+      
+      <!-- 实时手势舞特写卡片 -->
+      <div id="gesture-spotlight" class="glass-morphic rounded-3xl p-5 border border-slate-800 flex flex-col justify-between items-center text-center transition-all duration-300 min-h-[280px]">
+        <div class="w-full flex justify-between items-center text-[9px] font-mono-tech text-slate-400 border-b border-slate-900 pb-2">
+          <span class="text-[#00F5FF]">🦾 TACTICAL GESTURE SPOTLIGHT</span>
+          <span id="gesture-step-tag" class="text-amber-400">STANDBY</span>
+        </div>
+
+        <!-- 动态 SVG 手势图形容器 -->
+        <div id="gesture-svg-box" class="my-4 text-[#00F5FF] w-28 h-28 flex items-center justify-center transition-all duration-300 transform">
+          <!-- 默认 Radar 扫描图案 -->
+          <svg class="w-20 h-20 opacity-40 animate-spin" viewBox="0 0 100 100" style="animation-duration: 6s">
+            <circle cx="50" cy="50" r="42" stroke="#00F5FF" stroke-width="3" stroke-dasharray="8 6" fill="none"/>
+            <path d="M50 10v40l25 25" stroke="#00F5FF" stroke-width="3"/>
+          </svg>
+        </div>
+
+        <div class="w-full">
+          <h3 id="gesture-title" class="text-sm font-black text-white tracking-wide">准备进行特工手势舞...</h3>
+          <p id="gesture-desc" class="text-[11px] text-emerald-400 font-mono-tech mt-1 leading-relaxed">
+            点击下方播放键，手势舞指令将随音乐拍点全息同步显示！
+          </p>
+        </div>
+      </div>
+
+      <!-- 播放控制看板 -->
+      <div class="glass-morphic rounded-3xl p-5 border border-slate-800 flex flex-col gap-4">
+        
+        <!-- 播放主按钮与波形 -->
+        <div class="bg-slate-950/60 p-3.5 rounded-2xl border border-slate-900 flex items-center justify-between">
+          <div class="flex items-center gap-3 text-left">
+            <div class="flex items-end gap-1 h-6 w-10" id="waveform-visualizer">
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+              <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
+            </div>
+            <div>
+              <span id="player-track-title" class="text-xs font-bold block text-white font-mono-tech truncate max-w-[170px]">CH-1: UNIT 6 FAMILY SONG</span>
+              <span id="player-track-status" class="text-[9px] text-slate-500 font-mono-tech uppercase">STANDBY</span>
+            </div>
+          </div>
+          
+          <button id="btn-play" onclick="togglePlayback()" class="w-12 h-12 rounded-full bg-[#00F5FF] hover:bg-[#00e1ec] text-slate-950 flex items-center justify-center transition-all duration-300 active:scale-95 shadow-[0_0_15px_rgba(0,245,255,0.3)]">
+            <svg id="play-icon" class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pause-icon" class="w-6 h-6 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+        </div>
+
+        <!-- 音频加载源 (拖放 / GitHub直连) -->
+        <div class="grid grid-cols-2 gap-2">
+          <div id="drop-zone" class="border border-dashed border-slate-800 hover:border-[#00F5FF]/40 rounded-2xl p-2 text-center cursor-pointer transition-all relative bg-slate-950/20 flex flex-col justify-center min-h-[60px]">
+            <input type="file" id="mp3-file-input" accept="audio/*" onchange="handleLocalMp3(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+            <span class="text-[10px] font-bold text-slate-300 block pointer-events-none">📁 拖放/选择 MP3</span>
+            <span class="text-[8px] text-slate-500 font-mono-tech block pointer-events-none">LOCAL MP3 FILE</span>
+          </div>
+
+          <button onclick="handleCloudBackup()" class="border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-2 text-center cursor-pointer transition-all bg-slate-950/20 hover:bg-emerald-950/10 flex flex-col justify-center items-center min-h-[60px]">
+            <span class="text-[10px] font-bold text-emerald-400 block">☁️ GitHub 云端直连</span>
+            <span class="text-[8px] text-slate-500 font-mono-tech block">CLOUD STREAM</span>
+          </button>
+        </div>
+
+        <!-- 时间轴微调滑块 -->
+        <div>
+          <div class="flex justify-between items-center text-[10px] font-mono-tech mb-1">
+            <span class="text-amber-500">⏱️ CALIBRATOR (时间轴校准)</span>
+            <span id="delay-display" class="text-[#00F5FF] font-bold">OFFSET: 0.0s</span>
+          </div>
+          <input id="calibration-range" type="range" min="-5.0" max="5.0" step="0.1" value="0.0" oninput="updateCalibration(this.value)" class="w-full h-1 bg-slate-800 rounded-full appearance-none accent-[#00F5FF]">
+        </div>
+
+        <!-- 云端直连配置框 -->
+        <div class="text-left">
+          <span class="text-[8px] text-slate-500 font-mono-tech uppercase block mb-0.5">GitHub Audio File Link:</span>
+          <input type="text" id="cloud-url-input" oninput="handleCloudUrlInput(this.value)" placeholder="Unit6_Family_Song.mp3" class="w-full bg-slate-900 border border-slate-800 focus:border-[#00F5FF] rounded-lg p-1.5 text-[9px] text-slate-300 font-mono-tech focus:outline-none">
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 右侧 7 列：全息歌词与手势舞滚动视窗 -->
+    <section class="lg:col-span-7 flex flex-col justify-between gap-4">
+      <div class="glass-morphic rounded-3xl p-5 border border-slate-800 flex-grow flex flex-col justify-between overflow-hidden relative">
+        <div class="flex justify-between items-center text-[10px] font-mono-tech text-slate-400 mb-3 pb-2 border-b border-slate-900">
+          <span>📡 HOLOGRAPHIC SCROLL ACTIVE</span>
+          <span class="text-[#00F5FF]">CLICK ANY LINE TO SPEAK / VIEW GESTURE</span>
+        </div>
+
+        <!-- 歌词与手势滚动列表 -->
+        <div id="lyric-scroller" class="flex-grow overflow-y-auto no-scrollbar py-4 space-y-4 flex flex-col text-center max-h-[460px]">
+          <!-- 动态渲染歌词卡片 -->
+        </div>
+
+        <div class="text-[9px] text-center text-slate-500 uppercase tracking-widest mt-2 font-mono-tech">
+          Follow the gesture guidance on the left spotlight card for maximum squad fun!
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 隐藏的实体音频节点 -->
+  <audio id="audio-element" class="hidden"></audio>
+
+  <!-- 页脚 -->
+  <footer class="w-full max-w-6xl mx-auto text-center text-[8px] text-slate-600 font-mono-tech uppercase tracking-widest mt-4 border-t border-slate-900 pt-3">
+    Operation Squad Registry // Managed via Pinyin Matrix Protocols // PLI Summer Camp
+  </footer>
+
+  <script>
+    // =========================================================================
+    // ⚙️ 默认 GitHub 云端音频文件名 (可随时修改)
+    // =========================================================================
+    const DEFAULT_GITHUB_URL = "Unit6_Family_Song.mp3";
+
+    // 专属 SVG 矢量手势卡片库 (涵盖特工手势舞全姿势)
+    const gestureSVGs = {
+      'radar': `<svg class="w-20 h-20 opacity-40 animate-spin" viewBox="0 0 100 100" style="animation-duration: 6s"><circle cx="50" cy="50" r="42" stroke="#00F5FF" stroke-width="3" stroke-dasharray="8 6" fill="none"/><path d="M50 10v40l25 25" stroke="#00F5FF" stroke-width="3"/></svg>`,
+      'house': `<svg class="w-20 h-20 stroke-current text-[#00F5FF]" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M15 50L50 20l35 30v35H15V50z"/><path d="M38 85V55h24v30" stroke-width="2.5"/></svg>`,
+      'parents': `<svg class="w-20 h-20 stroke-current text-emerald-400" viewBox="0 0 100 100" fill="none" stroke-width="3"><circle cx="35" cy="35" r="12"/><circle cx="65" cy="35" r="12"/><path d="M20 75c0-12 8-18 15-18s15 6 15 18M50 75c0-12 8-18 15-18s15 6 15 18"/></svg>`,
+      'shield': `<svg class="w-20 h-20 stroke-current text-blue-400" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M50 15L20 28v28c0 20 18 28 30 32 12-4 30-12 30-32V28L50 15z"/><path d="M35 35l30 30M65 35L35 65" stroke-width="2.5"/></svg>`,
+      'down': `<svg class="w-20 h-20 stroke-current text-amber-400" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M50 20v50M30 50l20 20 20-20M20 80h60"/></svg>`,
+      'three': `<svg class="w-20 h-20 stroke-current text-[#00F5FF]" viewBox="0 0 100 100" fill="none" stroke-width="3"><rect x="30" y="55" width="40" height="30" rx="10"/><path d="M40 55V20M50 55V15M60 55V20"/></svg>`,
+      'up': `<svg class="w-20 h-20 stroke-current text-purple-400" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M50 80V30M30 50l20-20 20 20M20 20h60"/></svg>`,
+      'twelve': `<svg class="w-20 h-20 text-amber-400 flex items-center justify-center font-bold text-3xl font-mono-tech" viewBox="0 0 100 100"><text x="50" y="62" text-anchor="middle" fill="currentColor">10+2</text><circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="3" fill="none"/></svg>`,
+      'rally': `<svg class="w-20 h-20 stroke-current text-pink-400 animate-bounce" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M50 20l10 20 20 10-20 10-10 20-10-20-20-10 20-10z"/></svg>`,
+      'question': `<svg class="w-20 h-20 stroke-current text-rose-500" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M30 75h40M30 65l10-25c0-10 10-15 20-5s5 20-5 25l-5 5v10"/><circle cx="50" cy="85" r="2" fill="currentColor"/></svg>`,
+      'six': `<svg class="w-20 h-20 text-[#00F5FF] flex items-center justify-center font-black text-4xl font-mono-tech" viewBox="0 0 100 100"><text x="50" y="65" text-anchor="middle" fill="currentColor">🤙 6</text><circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="3" fill="none"/></svg>`,
+      'heart': `<svg class="w-20 h-20 stroke-current text-rose-500 fill-rose-500/20 animate-pulse" viewBox="0 0 100 100" stroke-width="2"><path d="M50 85S15 55 15 35c0-12 10-20 22-20 8 0 11 5 13 8 2-3 5-8 13-8 12 0 22 8 22 20 0 20-35 50-35 50z"/></svg>`,
+      'check': `<svg class="w-20 h-20 stroke-current text-emerald-400" viewBox="0 0 100 100" fill="none" stroke-width="4"><path d="M25 50l20 20 35-40"/></svg>`
+    };
+
+    // 双语歌词与特工手势舞核心相对时间轴
+    const lyricData = [
+      { id: 0, time: 0.0,  zh: "Yeah, Pinyin Matrix. Scanning squad members...", py: "Family base coordinates locked in! 3, 2, 1, Go!", title: "🛰️ 系统的锁定", desc: "双腿平分站立，双手做扫描镜按压姿势！", svg: "radar" },
+      { id: 1, time: 7.5,  zh: "这是我的家 (Zhè shì wǒ de jiā)", py: "This is my house / squad base.", title: "🏠 宀 (屋顶) 房顶手势", desc: "双手食指与中指在胸前相抵，搭出一个三角房顶（宀）！", svg: "house" },
+      { id: 2, time: 10.0, zh: "我有爸爸妈妈 (wǒ yǒu bàba māma)", py: "I have dad and mom.", title: "👨‍👩‍👦 双手 1+1 姿势", desc: "左手比“1”（爸爸），右手比“1”（妈妈），在胸前微微晃动。", svg: "parents" },
+      { id: 3, time: 12.0, zh: "还有兄弟姐妹 (hái yǒu xiōngdì jiěmèi)", py: "And brothers and sisters.", title: "🙅‍♂️ 特工交叉格挡", desc: "双手交叉抱胸，做出冷酷特工背靠背领地格挡的姿势！", svg: "shield" },
+      { id: 4, time: 16.0, zh: "这是我的弟弟 (Zhè shì wǒ de dìdi)", py: "This is my younger brother.", title: "👶 低位手掌平比", desc: "单手手掌向下，在腰部位置比划高度（代表小弟弟）。", svg: "down" },
+      { id: 5, time: 18.0, zh: "他 ── 三岁！(tā sān suì!)", py: "He is 3 years old!", title: "🤟 单手高举 “3”", desc: "迅速单手向镜头举起 “3” 个手指，眼神犀利盯着镜头！", svg: "three" },
+      { id: 6, time: 20.0, zh: "这是我的姐姐 (Zhè shì wǒ de jiějie)", py: "This is my older sister.", title: "👧 高位头顶比划", desc: "伸出右手食指，在头顶上方比划高度（代表高姐姐）。", svg: "up" },
+      { id: 7, time: 22.0, zh: "她 ── 十二岁！(tā shí'èr suì!)", py: "She is 12 years old!", title: "🔟✌️ 闪电 10+2 变阵", desc: "闪电伸手：先做单手“10”（交叉食指），瞬间变“2”（剪刀手）！", svg: "twelve" },
+      { id: 8, time: 24.5, zh: "Count the squad, count the head!", py: "Reveal the code, keep it spread! (Hey!)", title: "⚡ 战术集结号角", desc: "全班拍手打拍子：Count the squad, count the head!", svg: "rally" },
+      { id: 9, time: 28.5, zh: "你家有几口人？(Nǐ jiā yǒu jǐ kǒu rén?)", py: "How many people in your family?", title: "📢 喇叭喊话盘问", desc: "双手在嘴前做成喇叭状，向对方阵营大声喊话盘问！", svg: "question" },
+      { id: 10, time: 31.0, zh: "我家有六个人！(Wǒ jiā yǒu liù gè rén!)", py: "My family has 6 people!", title: "🤙 中国式单手 “6”", desc: "瞬间向镜头高高举出中国式单手 “6” 🤙（大拇指与小指张开）！", svg: "six" },
+      { id: 11, time: 35.0, zh: "你家有几口人？(Nǐ jiā yǒu jǐ kǒu rén?)", py: "How many people in your family?", title: "📢 喇叭喊话盘问", desc: "双手在嘴前做成喇叭状，向对方阵营大声喊话盘问！", svg: "question" },
+      { id: 12, time: 37.5, zh: "我家有六个人！(Wǒ jiā yǒu liù gè rén!)", py: "My family has 6 people!", title: "🤙 中国式单手 “6”", desc: "全员举起 “6” 🤙 姿势！", svg: "six" },
+      { id: 13, time: 41.0, zh: "我家有六个人！(Wǒ jiā yǒu liù gè rén!)", py: "Full squad shouted hook!", title: "🤙 终极阵营高呼", desc: "全班起立大声爆音：我家有六个人！", svg: "six" },
+      { id: 14, time: 43.5, zh: "The ultimate family love code...", py: "Subdued ambient synth lift", title: "🎹 钢琴声学留白", desc: "双手在胸前合十，准备终极爱心定格！", svg: "radar" },
+      { id: 15, time: 52.0, zh: "我家有六个人！(Wǒ jiā yǒu liù gè rén!)", py: "Final Hook Surge!", title: "🤙 终极阵营高呼", desc: "我家有六个人！", svg: "six" },
+      { id: 16, time: 55.5, zh: "我 ── 爱 ── 我的家！(Wǒ ài wǒ de jiā!) ❤️", py: "I love my family!", title: "❤️ 终极爱心 Pose 定格", desc: "双手在胸前比出一个大大的爱心 ❤️，面向镜头做终极定格！", svg: "heart" },
+      { id: 17, time: 59.5, zh: "Squad Registry verified. System secure.", py: "Mission complete.", title: "🛰️ 任务安全解密", desc: "特工部落归队，系统注销！", svg: "check" }
+    ];
+
+    let audioCtx = null;
+    let playTimerInterval = null;
+    let fallbackInterval = null;
+    let isPlaying = false;
+    let audioSource = 'local'; // 'local' | 'cloud' | 'synth'
+    let offsetVal = 0.0;
+    let fallbackStartTime = 0;
+
+    const audioEl = document.getElementById('audio-element');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const trackTitle = document.getElementById('player-track-title');
+    const trackStatus = document.getElementById('player-track-status');
+    const scroller = document.getElementById('lyric-scroller');
+
+    window.onload = function() {
+      const storedUrl = localStorage.getItem('unit6_family_cloud_url') || DEFAULT_GITHUB_URL;
+      document.getElementById('cloud-url-input').value = storedUrl;
+      renderLyrics();
+    };
+
+    function renderLyrics() {
+      scroller.innerHTML = '';
+      lyricData.forEach((line) => {
+        const div = document.createElement('div');
+        div.className = 'lyric-line p-3 rounded-2xl cursor-pointer hover:bg-slate-900/50 border border-slate-900/60 transition-all text-slate-400';
+        div.id = `line-${line.id}`;
+        div.onclick = () => {
+          updateSpotlight(line);
+          speakText(line.zh);
+        };
+        div.innerHTML = `
+          <div class="text-lg font-black tracking-wide">${line.zh}</div>
+          <div class="text-xs text-emerald-400 font-mono-tech mt-0.5">${line.py}</div>
+          <div class="text-[10px] text-slate-500 font-mono-tech mt-1 flex justify-center items-center gap-1">
+            <span class="text-[#00F5FF]">🖐️ 手势:</span> ${line.title}
+          </div>
+        `;
+        scroller.appendChild(div);
+      });
+    }
+
+    // 拖动滑块实时更新 OFFSET 值
