@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>特工部落手势舞全息播放终端 v4.0 (Family Squad Gesture Matrix Player)</title>
+  <title>特工部落手势舞全息播放终端 v4.1 (Family Squad Gesture Matrix Player)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -24,21 +24,13 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .neon-border-cyan {
-      box-shadow: 0 0 15px rgba(0, 245, 255, 0.15);
-      border-color: rgba(0, 245, 255, 0.3);
-    }
-    .neon-border-[#FF0055] {
-      box-shadow: 0 0 15px rgba(255, 0, 85, 0.15);
-      border-color: rgba(255, 0, 85, 0.3);
-    }
     .lyric-line {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .lyric-active {
       color: #00F5FF;
       text-shadow: 0 0 12px rgba(0, 245, 255, 0.6);
-      transform: scale(1.05);
+      transform: scale(1.03);
       font-weight: 700;
     }
     /* 隐藏滚动条 */
@@ -54,7 +46,7 @@
       50% { box-shadow: 0 0 30px rgba(0, 245, 255, 0.6); }
     }
     .active-gesture-card {
-      animation: pulseGlow 2s infinite;
+      animation: pulseGlow 1.5s infinite;
       border-color: #00F5FF !important;
     }
   </style>
@@ -64,7 +56,7 @@
   <!-- 顶部科技感控制台 -->
   <header class="w-full max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-4 border-b border-slate-800 pb-3">
     <div>
-      <h1 class="text-xl font-bold tracking-wider text-[#00F5FF]">🛰️ SQUAD_GESTURE_PLAYER v4.0</h1>
+      <h1 class="text-xl font-bold tracking-wider text-[#00F5FF]">🛰️ SQUAD_GESTURE_PLAYER v4.1</h1>
       <p class="text-[10px] text-slate-400 uppercase tracking-widest font-mono-tech">Unit 6 Family Squad Registry // Real-time Gesture Matrix</p>
     </div>
     <div class="flex gap-2 mt-3 md:mt-0 bg-slate-950/80 p-1.5 rounded-full border border-slate-800 text-xs font-mono-tech">
@@ -79,14 +71,14 @@
     <section class="lg:col-span-5 flex flex-col justify-between gap-4">
       
       <!-- 实时手势舞特写卡片 -->
-      <div id="gesture-spotlight" class="glass-morphic rounded-3xl p-5 border border-slate-800 flex flex-col justify-between items-center text-center transition-all duration-300 min-h-[280px]">
+      <div id="gesture-spotlight" class="glass-morphic rounded-3xl p-5 border border-slate-800 flex flex-col justify-between items-center text-center transition-all duration-300 min-h-[260px]">
         <div class="w-full flex justify-between items-center text-[9px] font-mono-tech text-slate-400 border-b border-slate-900 pb-2">
           <span class="text-[#00F5FF]">🦾 TACTICAL GESTURE SPOTLIGHT</span>
           <span id="gesture-step-tag" class="text-amber-400">STANDBY</span>
         </div>
 
         <!-- 动态 SVG 手势图形容器 -->
-        <div id="gesture-svg-box" class="my-4 text-[#00F5FF] w-28 h-28 flex items-center justify-center transition-all duration-300 transform">
+        <div id="gesture-svg-box" class="my-3 text-[#00F5FF] w-24 h-24 flex items-center justify-center transition-all duration-300 transform">
           <!-- 默认 Radar 扫描图案 -->
           <svg class="w-20 h-20 opacity-40 animate-spin" viewBox="0 0 100 100" style="animation-duration: 6s">
             <circle cx="50" cy="50" r="42" stroke="#00F5FF" stroke-width="3" stroke-dasharray="8 6" fill="none"/>
@@ -115,8 +107,8 @@
               <div class="bar w-1 bg-[#00F5FF] h-1" style="transition: height 0.1s;"></div>
             </div>
             <div>
-              <span id="player-track-title" class="text-xs font-bold block text-white font-mono-tech truncate max-w-[170px]">CH-1: UNIT 6 FAMILY SONG</span>
-              <span id="player-track-status" class="text-[9px] text-slate-500 font-mono-tech uppercase">STANDBY</span>
+              <span id="player-track-title" class="text-xs font-bold block text-white font-mono-tech truncate max-w-[170px]">SQUAD_REGISTRY.MP3</span>
+              <span id="player-track-status" class="text-[9px] text-slate-400 font-mono-tech uppercase">READY // CLICK TO PLAY</span>
             </div>
           </div>
           
@@ -128,14 +120,14 @@
 
         <!-- 音频加载源 (拖放 / GitHub直连) -->
         <div class="grid grid-cols-2 gap-2">
-          <div id="drop-zone" class="border border-dashed border-slate-800 hover:border-[#00F5FF]/40 rounded-2xl p-2 text-center cursor-pointer transition-all relative bg-slate-950/20 flex flex-col justify-center min-h-[60px]">
+          <div id="drop-zone" class="border border-dashed border-slate-800 hover:border-[#00F5FF]/50 rounded-2xl p-2 text-center cursor-pointer transition-all relative bg-slate-950/30 flex flex-col justify-center min-h-[60px]">
             <input type="file" id="mp3-file-input" accept="audio/*" onchange="handleLocalMp3(event)" class="absolute inset-0 opacity-0 cursor-pointer">
             <span class="text-[10px] font-bold text-slate-300 block pointer-events-none">📁 拖放/选择 MP3</span>
-            <span class="text-[8px] text-slate-500 font-mono-tech block pointer-events-none">LOCAL MP3 FILE</span>
+            <span class="text-[8px] text-slate-500 font-mono-tech block pointer-events-none">LOCAL SQUAD_REGISTRY.MP3</span>
           </div>
 
-          <button onclick="handleCloudBackup()" class="border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-2 text-center cursor-pointer transition-all bg-slate-950/20 hover:bg-emerald-950/10 flex flex-col justify-center items-center min-h-[60px]">
-            <span class="text-[10px] font-bold text-emerald-400 block">☁️ GitHub 云端直连</span>
+          <button onclick="handleCloudBackup()" class="border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-2 text-center cursor-pointer transition-all bg-slate-950/30 hover:bg-emerald-950/20 flex flex-col justify-center items-center min-h-[60px]">
+            <span class="text-[10px] font-bold text-emerald-400 block">☁️ 重新载入 GitHub 云端</span>
             <span class="text-[8px] text-slate-500 font-mono-tech block">CLOUD STREAM</span>
           </button>
         </div>
@@ -151,7 +143,7 @@
 
         <!-- 云端直连配置框 -->
         <div class="text-left">
-          <span class="text-[8px] text-slate-500 font-mono-tech uppercase block mb-0.5">GitHub Audio File Link:</span>
+          <span class="text-[8px] text-slate-500 font-mono-tech uppercase block mb-0.5">GitHub Audio File Path:</span>
           <input type="text" id="cloud-url-input" oninput="handleCloudUrlInput(this.value)" placeholder="Squad_Registry.mp3" class="w-full bg-slate-900 border border-slate-800 focus:border-[#00F5FF] rounded-lg p-1.5 text-[9px] text-slate-300 font-mono-tech focus:outline-none">
         </div>
 
@@ -168,7 +160,7 @@
         </div>
 
         <!-- 歌词与手势滚动列表 -->
-        <div id="lyric-scroller" class="flex-grow overflow-y-auto no-scrollbar py-4 space-y-4 flex flex-col text-center max-h-[460px]">
+        <div id="lyric-scroller" class="flex-grow overflow-y-auto no-scrollbar py-2 space-y-3 flex flex-col text-center max-h-[460px]">
           <!-- 动态渲染歌词卡片 -->
         </div>
 
@@ -180,8 +172,8 @@
 
   </main>
 
-  <!-- 隐藏的实体音频节点 -->
-  <audio id="audio-element" class="hidden"></audio>
+  <!-- 隐藏的实体音频节点，加入 preload 与 crossorigin 属性 -->
+  <audio id="audio-element" preload="auto" crossorigin="anonymous" class="hidden"></audio>
 
   <!-- 页脚 -->
   <footer class="w-full max-w-6xl mx-auto text-center text-[8px] text-slate-600 font-mono-tech uppercase tracking-widest mt-4 border-t border-slate-900 pt-3">
@@ -190,11 +182,11 @@
 
   <script>
     // =========================================================================
-    // ⚙️ 默认 GitHub 云端音频文件名 (可随时修改)
+    // ⚙️ 默认 GitHub 云端音频文件名 (已锁定为您的最新文件名 Squad_Registry.mp3)
     // =========================================================================
     const DEFAULT_GITHUB_URL = "Squad_Registry.mp3";
 
-    // 专属 SVG 矢量手势卡片库 (涵盖特工手势舞全姿势)
+    // 专属 SVG 矢量手势卡片库
     const gestureSVGs = {
       'radar': `<svg class="w-20 h-20 opacity-40 animate-spin" viewBox="0 0 100 100" style="animation-duration: 6s"><circle cx="50" cy="50" r="42" stroke="#00F5FF" stroke-width="3" stroke-dasharray="8 6" fill="none"/><path d="M50 10v40l25 25" stroke="#00F5FF" stroke-width="3"/></svg>`,
       'house': `<svg class="w-20 h-20 stroke-current text-[#00F5FF]" viewBox="0 0 100 100" fill="none" stroke-width="3"><path d="M15 50L50 20l35 30v35H15V50z"/><path d="M38 85V55h24v30" stroke-width="2.5"/></svg>`,
@@ -237,7 +229,7 @@
     let playTimerInterval = null;
     let fallbackInterval = null;
     let isPlaying = false;
-    let audioSource = 'local'; // 'local' | 'cloud' | 'synth'
+    let audioSource = 'cloud'; // 'local' | 'cloud' | 'synth'
     let offsetVal = 0.0;
     let fallbackStartTime = 0;
 
@@ -252,22 +244,35 @@
       const storedUrl = localStorage.getItem('unit6_family_cloud_url') || DEFAULT_GITHUB_URL;
       document.getElementById('cloud-url-input').value = storedUrl;
       renderLyrics();
+
+      // 预先装载默认音频源（指向 Squad_Registry.mp3）
+      audioEl.src = storedUrl;
+      audioEl.load();
+
+      // 实时音频错误监听器（取代离散报错弹窗）
+      audioEl.onerror = function() {
+        console.warn("Audio element failed to load source:", audioEl.src);
+        if (isPlaying) {
+          trackStatus.innerText = "⚠️ 音频加载失败，将自动降级为合成鼓点";
+          trackStatus.className = "text-[9px] text-rose-400 font-mono-tech uppercase animate-pulse";
+        }
+      };
     };
 
     function renderLyrics() {
       scroller.innerHTML = '';
       lyricData.forEach((line) => {
         const div = document.createElement('div');
-        div.className = 'lyric-line p-3 rounded-2xl cursor-pointer hover:bg-slate-900/50 border border-slate-900/60 transition-all text-slate-400';
+        div.className = 'lyric-line p-2.5 rounded-2xl cursor-pointer hover:bg-slate-900/50 border border-slate-900/60 transition-all text-slate-400';
         div.id = `line-${line.id}`;
         div.onclick = () => {
           updateSpotlight(line);
           speakText(line.zh);
         };
         div.innerHTML = `
-          <div class="text-lg font-black tracking-wide">${line.zh}</div>
-          <div class="text-xs text-emerald-400 font-mono-tech mt-0.5">${line.py}</div>
-          <div class="text-[10px] text-slate-500 font-mono-tech mt-1 flex justify-center items-center gap-1">
+          <div class="text-base font-black tracking-wide">${line.zh}</div>
+          <div class="text-[11px] text-emerald-400 font-mono-tech mt-0.5">${line.py}</div>
+          <div class="text-[9px] text-slate-500 font-mono-tech mt-1 flex justify-center items-center gap-1">
             <span class="text-[#00F5FF]">🖐️ 手势:</span> ${line.title}
           </div>
         `;
@@ -275,4 +280,206 @@
       });
     }
 
-    // 拖动滑块实时更新 OFFSET 值
+    function updateCalibration(value) {
+      offsetVal = parseFloat(value);
+      document.getElementById('delay-display').innerText = `OFFSET: ${offsetVal > 0 ? '+' : ''}${offsetVal.toFixed(1)}s`;
+    }
+
+    function handleCloudUrlInput(val) {
+      localStorage.setItem('unit6_family_cloud_url', val.trim());
+      audioEl.src = val.trim() || DEFAULT_GITHUB_URL;
+      audioEl.load();
+    }
+
+    // 触发主播放与暂停引擎
+    function togglePlayback() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (isPlaying) {
+        forceStop();
+      } else {
+        isPlaying = true;
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        
+        // 如果未准备音源，默认给与云端音源
+        if (!audioEl.src || audioEl.src === window.location.href) {
+          const inputUrl = document.getElementById('cloud-url-input').value.trim();
+          audioEl.src = inputUrl || DEFAULT_GITHUB_URL;
+          audioEl.load();
+        }
+
+        // 尝试播放 <audio> 节点
+        audioEl.play().then(() => {
+          trackStatus.innerText = audioSource === 'local' ? "LOCAL_PLAYING // SQUAD_REGISTRY" : "CLOUD_PLAYING // SQUAD_REGISTRY";
+          trackStatus.className = "text-[9px] text-emerald-400 font-mono-tech uppercase";
+          startWaveform();
+          runLyricSyncEngine(true);
+        }).catch(err => {
+          // 若缺乏 MP3 源或无法拉取，平滑降级走 Web Audio 离线鼓点发生
+          console.warn("Audio play rejected, falling back to Web Audio Synth:", err);
+          audioSource = 'synth';
+          trackTitle.innerText = "CH-1: SYNTH BEATFALL";
+          trackStatus.innerText = "SYNTH_PLAYING (OFFLINE)";
+          trackStatus.className = "text-[9px] text-amber-400 font-mono-tech uppercase";
+          fallbackStartTime = Date.now();
+          startWaveform();
+          
+          fallbackInterval = setInterval(() => {
+            playSyntheticSynth(audioCtx.currentTime);
+          }, 350);
+
+          runLyricSyncEngine(false);
+        });
+      }
+    }
+
+    function runLyricSyncEngine(usingAudio) {
+      playTimerInterval = setInterval(() => {
+        const rawTime = usingAudio ? audioEl.currentTime : (Date.now() - fallbackStartTime) / 1000;
+        const calibratedTime = rawTime + offsetVal;
+
+        let activeIdx = -1;
+        for (let i = 0; i < lyricData.length; i++) {
+          if (calibratedTime >= lyricData[i].time) {
+            activeIdx = i;
+          }
+        }
+
+        if (activeIdx !== -1) {
+          document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('lyric-active', 'bg-slate-900/60'));
+          
+          const activeLine = document.getElementById(`line-${activeIdx}`);
+          if (activeLine) {
+            activeLine.classList.add('lyric-active', 'bg-slate-900/60');
+            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 更新左侧大屏手势舞特写卡片
+            updateSpotlight(lyricData[activeIdx]);
+          }
+        }
+
+        if (usingAudio && audioEl.ended) {
+          forceStop();
+        }
+      }, 100);
+    }
+
+    // 更新左侧 Hand Gesture Spotlight 视觉卡片
+    function updateSpotlight(item) {
+      document.getElementById('gesture-title').innerText = item.zh;
+      document.getElementById('gesture-desc').innerText = `${item.title}: ${item.desc}`;
+      document.getElementById('gesture-step-tag').innerText = `STEP ${(item.id + 1).toString().padStart(2, '0')}`;
+      
+      const svgBox = document.getElementById('gesture-svg-box');
+      svgBox.innerHTML = gestureSVGs[item.svg] || gestureSVGs['radar'];
+      
+      const card = document.getElementById('gesture-spotlight');
+      card.classList.add('active-gesture-card');
+      setTimeout(() => card.classList.remove('active-gesture-card'), 600);
+    }
+
+    function forceStop() {
+      isPlaying = false;
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
+      trackStatus.innerText = "STOPPED";
+      trackStatus.className = "text-[9px] text-slate-500 font-mono-tech uppercase";
+      
+      audioEl.pause();
+      clearInterval(playTimerInterval);
+      clearInterval(fallbackInterval);
+      stopWaveform();
+
+      document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('lyric-active', 'bg-slate-900/60'));
+    }
+
+    // 本地 MP3 载入
+    function handleLocalMp3(event) {
+      const file = event.target.files[0] || (event.dataTransfer && event.dataTransfer.files[0]);
+      if (!file) return;
+
+      forceStop();
+      audioSource = 'local';
+
+      const objectUrl = URL.createObjectURL(file);
+      trackTitle.innerText = file.name.toUpperCase();
+      audioEl.src = objectUrl;
+      audioEl.load();
+
+      togglePlayback();
+    }
+
+    // 云端 GitHub MP3 直连
+    function handleCloudBackup() {
+      forceStop();
+      audioSource = 'cloud';
+
+      const inputUrl = document.getElementById('cloud-url-input').value.trim();
+      const cloudUrl = inputUrl || DEFAULT_GITHUB_URL;
+
+      trackTitle.innerText = "SQUAD_REGISTRY.MP3";
+      audioEl.src = cloudUrl;
+      audioEl.load();
+
+      togglePlayback();
+    }
+
+    // Web Speech API 极速带读发音
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // 物理声学 Synth 鼓点
+    function playSyntheticSynth(time) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(130, time);
+      osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.3);
+      gain.gain.setValueAtTime(0.3, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+      osc.start(time);
+      osc.stop(time + 0.3);
+    }
+
+    // 动态波形条
+    let visualizerTimer = null;
+    function startWaveform() {
+      const bars = document.querySelectorAll('#waveform-visualizer .bar');
+      visualizerTimer = setInterval(() => {
+        bars.forEach(bar => {
+          const randHeight = Math.floor(Math.random() * 20) + 4;
+          bar.style.height = `${randHeight}px`;
+        });
+      }, 100);
+    }
+
+    function stopWaveform() {
+      clearInterval(visualizerTimer);
+      document.querySelectorAll('#waveform-visualizer .bar').forEach(bar => bar.style.height = '4px');
+    }
+
+    // 拖拽手势
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-[#00F5FF]'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('border-[#00F5FF]'); });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-[#00F5FF]');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) handleLocalMp3({ target: { files: files } });
+    });
+  </script>
+</body>
+</html>
